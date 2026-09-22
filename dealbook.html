@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dealbook buyer crm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=zilla+slab:wght@400;500;600;700&family=source+sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#211d18;
+    --ink-soft:#5a5346;
+    --paper:#f3eee2;
+    --card:#fbf8f1;
+    --line:#ddd4bd;
+    --brick:#a8402a;
+    --brick-dark:#8a3320;
+    --teal:#2f4b3c;
+    --teal-soft:#e2e9e2;
+    --gold:#b8893c;
+    --shadow: 0 1px 2px rgba(33,29,24,.06), 0 6px 20px rgba(33,29,24,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'source sans 3', system-ui, sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'zilla slab', georgia, serif;}
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  .app{display:flex; min-height:100vh;}
+  .sidebar{
+    width:220px; flex-shrink:0; background:var(--ink); color:#efe8d8;
+    display:flex; flex-direction:column; padding:24px 0;
+  }
+  .brand{
+    font-family:'zilla slab', serif; font-size:22px; font-weight:600;
+    padding:0 24px 22px 24px; border-bottom:1px solid rgba(239,232,216,.14);
+    margin-bottom:14px; letter-spacing:.2px;
+  }
+  .brand span{color:var(--gold);}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:12px 24px; font-size:15px;
+    color:#cfc6ae; border-left:3px solid transparent; transition:background .15s, color .15s; cursor:pointer;
+  }
+  .nav-item:hover{background:rgba(239,232,216,.06); color:#fff;}
+  .nav-item.active{background:rgba(239,232,216,.09); color:#fff; border-left-color:var(--gold);}
+  .sidebar-foot{margin-top:auto; padding:14px 24px 0 24px; font-size:12px; color:#8b8271; border-top:1px solid rgba(239,232,216,.1);}
+  .main{flex:1; min-width:0; padding:20px 40px 100px; max-width:1180px;}
+  .page{display:none;}
+  .page.active{display:block; animation:pageIn .32s ease;}
+  @keyframes pageIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes appIn{ from{opacity:0;} to{opacity:1;} }
+  .app{animation:appIn .4s ease;}
+  .page-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px;}
+  .page-head h1{font-size:28px; margin:0; font-weight:600;}
+  .page-head p{margin:4px 0 0; color:var(--ink-soft); font-size:14px;}
+  .btn{
+    border:1px solid var(--ink); background:var(--ink); color:#fff; padding:9px 16px; border-radius:3px;
+    font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn:hover{background:#38332b;}
+  .btn.brick{background:var(--brick); border-color:var(--brick);}
+  .btn.brick:hover{background:var(--brick-dark);}
+  .btn.ghost{background:transparent; color:var(--ink); border-color:var(--line);}
+  .btn.ghost:hover{background:#eee6d2;}
+  .btn.sm{padding:6px 11px; font-size:13px;}
+  .btn.danger{background:transparent; border-color:var(--line); color:var(--brick);}
+  .btn.danger:hover{background:#f4e2dc;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:6px; box-shadow:var(--shadow);}
+  .grid{display:grid; gap:18px;}
+  .grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols-2{grid-template-columns:2fr 1fr;}
+  @media (max-width:900px){ .grid.cols-3, .grid.cols-2{grid-template-columns:1fr;} }
+  .stat{padding:18px 20px;}
+  .stat .num{font-family:'zilla slab',serif; font-size:32px; font-weight:600; line-height:1;}
+  .stat .label{color:var(--ink-soft); font-size:13px; margin-top:6px;}
+  .section-title{font-size:13px; color:var(--ink-soft); font-weight:600; margin:0 0 10px;}
+  .task-row, .buyer-row{display:flex; align-items:flex-start; gap:12px; padding:13px 16px; border-bottom:1px solid var(--line);}
+  .task-row:last-child, .buyer-row:last-child{border-bottom:none;}
+  .task-check{width:19px;height:19px; border-radius:50%; border:2px solid var(--line); flex-shrink:0; margin-top:2px; background:#fff; cursor:pointer;}
+  .task-check.done{background:var(--teal); border-color:var(--teal);}
+  .task-body{flex:1; min-width:0;}
+  .task-title{font-weight:600; font-size:14.5px;}
+  .task-title.done{text-decoration:line-through; color:var(--ink-soft);}
+  .task-meta{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .badge{display:inline-block; font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:20px; letter-spacing:.2px;}
+  .badge.hot{background:#f4e2dc; color:var(--brick-dark);}
+  .badge.warm{background:#f2e6c9; color:#7a5a1c;}
+  .badge.cold{background:var(--teal-soft); color:var(--teal);}
+  .empty{padding:26px 16px; text-align:center; color:var(--ink-soft); font-size:14px;}
+  input, select, textarea{
+    font-family:inherit; font-size:14px; padding:9px 11px; border:1px solid var(--line);
+    border-radius:4px; background:#fff; color:var(--ink); width:100%;
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--gold); outline-offset:0;}
+  label{font-size:12.5px; font-weight:600; color:var(--ink-soft); display:block; margin-bottom:5px;}
+  .field{margin-bottom:14px; position:relative;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .key-note{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+  .geo-status{font-size:11.5px; margin-top:4px; color:var(--teal);}
+  .geo-status.err{color:var(--brick-dark);}
+  .flag-row{display:flex; gap:18px; padding:2px 0 4px; flex-wrap:wrap;}
+  .flag-check{display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; color:var(--ink); cursor:pointer;}
+  .flag-check input{width:17px; height:17px; padding:0; accent-color:var(--teal);}
+  .modal-bg{display:none; position:fixed; inset:0; background:rgba(33,29,24,.45); align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; z-index:50;}
+  .modal-bg.show{display:flex;}
+  .modal{background:var(--card); border-radius:8px; width:100%; max-width:560px; padding:26px 28px; box-shadow:0 20px 60px rgba(0,0,0,.25); animation:modalIn .18s ease;}
+  @keyframes modalIn{ from{opacity:0; transform:translateY(-8px) scale(.98);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .modal h2{margin:0 0 16px; font-size:20px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+  .rating-row{display:flex; align-items:center; gap:12px;}
+  .rating-row input[type=range]{flex:1;}
+  .rating-num{font-family:'zilla slab',serif; font-weight:700; font-size:20px; width:28px; text-align:center;}
+  .chip-list{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  .chip{background:var(--teal-soft); color:var(--teal); font-size:12.5px; padding:4px 10px; border-radius:20px; display:flex; align-items:center; gap:6px;}
+  .chip button{background:none; border:none; color:var(--teal); font-size:14px; line-height:1; padding:0;}
+  .offer-item{border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin-top:8px; font-size:13.5px; background:#fff; display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .offer-item .oline1{font-weight:600;}
+  .offer-item .onotes{color:var(--ink-soft); margin-top:3px;}
+  .offer-item button{background:none; border:none; color:var(--brick); font-size:16px; line-height:1; padding:2px;}
+  .search-bar{display:flex; gap:10px; margin-bottom:18px;}
+  .search-bar input{flex:1;}
+  .buyer-name{font-weight:700; font-size:15px;}
+  .buyer-sub{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .buyer-actions{display:flex; gap:6px; flex-shrink:0;}
+  .toast{
+    position:fixed; bottom:20px; left:20px; background:var(--ink); color:#fff; padding:12px 18px; border-radius:6px;
+    font-size:13.5px; box-shadow:0 10px 30px rgba(0,0,0,.25); opacity:0; transform:translateY(8px); transition:.25s; pointer-events:none; z-index:100;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+  #geminiBubble{
+    position:fixed; bottom:22px; right:22px; width:56px; height:56px; border-radius:50%;
+    background:var(--brick); color:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 24px rgba(168,64,42,.45); z-index:60; border:none; font-size:24px; cursor:pointer;
+  }
+  #geminiBubble:hover{background:var(--brick-dark);}
+  #voiceBubble{
+    position:fixed; bottom:22px; right:88px; width:56px; height:56px; border-radius:50%;
+    background:var(--teal); color:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 24px rgba(47,75,60,.45); z-index:60; border:none; font-size:22px; cursor:pointer;
+  }
+  #voiceBubble:hover{filter:brightness(1.08);}
+  #voiceBubble.on{background:var(--brick); animation:voicePulse 1.4s infinite;}
+  @keyframes voicePulse{
+    0%{box-shadow:0 0 0 0 rgba(168,64,42,.5);}
+    70%{box-shadow:0 0 0 16px rgba(168,64,42,0);}
+    100%{box-shadow:0 0 0 0 rgba(168,64,42,0);}
+  }
+  #geminiPanel{
+    position:fixed; bottom:90px; right:22px; width:380px; max-width:calc(100vw - 40px);
+    height:520px; max-height:calc(100vh - 130px); background:var(--card); border:1px solid var(--line);
+    border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.3); z-index:60; display:none;
+    flex-direction:column; overflow:hidden;
+  }
+  #geminiPanel.show{display:flex; animation:modalIn .16s ease;}
+  .gp-head{background:var(--ink); color:#efe8d8; padding:13px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;}
+  .gp-head .t{font-family:'zilla slab',serif; font-size:16px; font-weight:600;}
+  .gp-head .t span{color:var(--gold);}
+  .gp-close{background:none; border:none; color:#cfc6ae; font-size:18px; padding:2px 6px; cursor:pointer;}
+  .gp-log{flex:1; overflow-y:auto; padding:14px 14px 6px;}
+  .ai-msg{max-width:86%; padding:10px 13px; border-radius:10px; margin-bottom:11px; font-size:13.8px; line-height:1.5; white-space:pre-wrap; animation:pageIn .18s ease;}
+  .ai-msg.user{background:var(--ink); color:#fff; margin-left:auto; border-bottom-right-radius:2px;}
+  .ai-msg.ai{background:var(--teal-soft); color:#1c2f26; border-bottom-left-radius:2px;}
+  .ai-msg.err{background:#f4e2dc; color:var(--brick-dark);}
+  .ai-msg.pending{background:var(--teal-soft); color:#1c2f26; border-bottom-left-radius:2px; opacity:.6;}
+  .gp-input-row{display:flex; gap:8px; padding:10px; border-top:1px solid var(--line); flex-shrink:0;}
+  .gp-input-row textarea{resize:none; height:40px; font-size:13.8px; padding:8px 10px;}
+  .gp-input-row button{flex-shrink:0;}
+  .gp-keywarning{padding:10px 14px; background:#f2e6c9; color:#7a5a1c; font-size:12.5px; flex-shrink:0;}
+  ::-webkit-scrollbar{width:9px;}
+  ::-webkit-scrollbar-thumb{background:#cfc4a4; border-radius:6px;}
+
+  /* ---- leads kanban board ---- */
+  .leads-board{display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; align-items:flex-start;}
+  .lead-col{background:var(--card); border:1px solid var(--line); border-radius:8px; width:270px; flex-shrink:0; display:flex; flex-direction:column; max-height:calc(100vh - 200px);}
+  .lead-col-head{padding:12px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; flex-shrink:0;}
+  .lead-col-head .title{font-weight:700; font-size:13.5px;}
+  .lead-col-head .count{background:var(--teal-soft); color:var(--teal); font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:20px;}
+  .lead-col-body{flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:9px; min-height:60px; transition:background .15s;}
+  .lead-col-body.drag-over{background:var(--teal-soft);}
+  .lead-col.stage-new .lead-col-head{background:#f7edc4; border-bottom-color:#e2cf87;}
+  .lead-col.stage-voicemail .lead-col-head{background:#d9e6f2; border-bottom-color:#a9c6e0;}
+  .lead-col.stage-not_interested .lead-col-head{background:#f4dcd6; border-bottom-color:#e3b3a7;}
+  .lead-col.stage-follow_up .lead-col-head{background:#dcefdc; border-bottom-color:#a9d6ab;}
+  .lead-col.stage-callback .lead-col-head{background:#e8dcf2; border-bottom-color:#c7a9e0;}
+  .lead-col.stage-interested .lead-col-head{background:#dcefdc; border-bottom-color:#a9d6ab;}
+  .lead-col.stage-negotiating .lead-col-head{background:#d9e6f2; border-bottom-color:#a9c6e0;}
+  .lead-col.stage-closed .lead-col-head{background:#dcefdc; border-bottom-color:#a9d6ab;}
+  :root[data-theme="dark"] .lead-col.stage-new .lead-col-head{background:#3a3320; border-bottom-color:#5a4d28;}
+  :root[data-theme="dark"] .lead-col.stage-voicemail .lead-col-head{background:#1f2c38; border-bottom-color:#2c4258;}
+  :root[data-theme="dark"] .lead-col.stage-not_interested .lead-col-head{background:#3a241d; border-bottom-color:#5a3226;}
+  :root[data-theme="dark"] .lead-col.stage-follow_up .lead-col-head,
+  :root[data-theme="dark"] .lead-col.stage-interested .lead-col-head,
+  :root[data-theme="dark"] .lead-col.stage-closed .lead-col-head{background:#1f3324; border-bottom-color:#2c4e36;}
+  :root[data-theme="dark"] .lead-col.stage-callback .lead-col-head{background:#2c1f38; border-bottom-color:#432c58;}
+  :root[data-theme="dark"] .lead-col.stage-negotiating .lead-col-head{background:#1f2c38; border-bottom-color:#2c4258;}
+  .lc-call{display:flex; align-items:center; gap:6px; margin-top:8px;}
+  .lc-call button{background:var(--teal-soft); color:var(--teal); border:none; border-radius:5px; padding:5px 9px; font-size:12px; font-weight:700;}
+  .lc-call button:hover{filter:brightness(.95);}
+  .lc-call .cnt{font-size:12px; color:var(--ink-soft); font-weight:600;}
+  .lead-card{
+    background:#fff; border:1px solid var(--line); border-radius:6px; padding:11px 12px; cursor:grab;
+    box-shadow:0 1px 2px rgba(33,29,24,.05); transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    animation:cardIn .22s ease;
+  }
+  @keyframes cardIn{ from{opacity:0; transform:translateY(6px) scale(.97);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .lead-card:hover{box-shadow:0 4px 14px rgba(33,29,24,.12); transform:translateY(-1px);}
+  .lead-card.dragging{opacity:.4; transform:scale(.96);}
+  .lead-card .lc-name{font-weight:700; font-size:14px;}
+  .lead-card .lc-sub{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .lead-card .lc-badges{display:flex; gap:5px; margin-top:6px; flex-wrap:wrap;}
+  .lead-card textarea.lc-note{
+    margin-top:8px; font-size:12.5px; padding:6px 8px; border-radius:4px; resize:vertical; min-height:34px;
+  }
+  :root[data-theme="dark"] .lead-col-body.drag-over{background:#243128;}
+
+  :root[data-theme="dark"]{
+    --ink:#f1ead9;
+    --ink-soft:#a89d87;
+    --paper:#14130f;
+    --card:#1e1c16;
+    --line:#33301f;
+    --brick:#d16a4e;
+    --brick-dark:#e17c5f;
+    --teal:#7ab894;
+    --teal-soft:#20302a;
+    --gold:#e0ac5f;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 26px rgba(0,0,0,.35);
+  }
+  :root[data-theme="dark"] body{background:radial-gradient(1200px 700px at 10% -10%, #1c1c14 0%, #14130f 55%);}
+  :root[data-theme="dark"] .sidebar{background:#0f0e0a; border-right:1px solid var(--line);}
+  :root[data-theme="dark"] .card{box-shadow:var(--shadow);}
+  :root[data-theme="dark"] input,
+  :root[data-theme="dark"] select,
+  :root[data-theme="dark"] textarea{
+    background:#17150f; color:var(--ink); border-color:var(--line);
+  }
+  :root[data-theme="dark"] .badge.hot{background:#3d241b; color:#f4b193;}
+  :root[data-theme="dark"] .badge.warm{background:#372c17; color:#e7c78b;}
+  :root[data-theme="dark"] .badge.cold{background:#1c2925; color:#8fc7ac;}
+  :root[data-theme="dark"] .lead-card, :root[data-theme="dark"] .board-card, :root[data-theme="dark"] .deal-card{background:#1c1a14; border-color:#332f22;}
+  :root[data-theme="dark"] .lead-card:hover, :root[data-theme="dark"] .board-card:hover, :root[data-theme="dark"] .deal-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.45);}
+  :root[data-theme="dark"] .toast{background:#2a271c; color:var(--ink);}
+  :root[data-theme="dark"] .modal{box-shadow:0 24px 70px rgba(0,0,0,.55);}
+  :root[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#3a3626;}
+  #themeToggle{justify-content:space-between;}
+</style>
+</head>
+<body>
+<div id="authGate" style="position:fixed; inset:0; background:var(--paper); z-index:200; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px;">
+  <div style="font-family:'zilla slab',serif; font-size:28px; font-weight:600;">deal<span style="color:var(--gold);">book</span></div>
+  <p style="color:var(--ink-soft); font-size:14px;">sign in to access your team's crm</p>
+  <button class="btn brick" id="googleSignInBtn" onclick="doGoogleSignIn()">sign in with google</button>
+  <p id="authGateNote" style="color:var(--ink-soft); font-size:12.5px; max-width:340px; text-align:center;"></p>
+</div>
+<div class="app" id="appRoot" style="display:none;">
+  <div class="sidebar">
+    <div class="brand">deal<span>book</span></div>
+    <div class="nav-item active" data-page="dashboard">dashboard</div>
+    <div class="nav-item" data-page="buyers">buyers</div>
+    <div class="nav-item" data-page="leads">leads</div>
+    <div class="nav-item" data-page="wholesalers">wholesaler list</div>
+    <div class="nav-item" data-page="deals">dispo deals</div>
+    <div class="nav-item" data-page="acquisition">acquisition</div>
+    <div class="nav-item" data-page="offers">offers</div>
+    <div class="nav-item" data-page="tasks">tasks</div>
+    <div class="nav-item" data-page="city">by city</div>
+    <div class="nav-item" data-page="settings">settings</div>
+    <div class="nav-item" id="themeToggle" onclick="toggleTheme()">🌙 dark mode</div>
+    <div class="sidebar-foot">your data stays in firebase and browser</div>
+  </div>
+  <div class="main">
+    <div class="page active" id="page-dashboard">
+      <div class="page-head">
+        <div><h1>dashboard</h1><p id="todayDate"></p></div>
+        <button class="btn brick" onclick="openTaskModal()">+ new task</button>
+      </div>
+      <div class="grid cols-3" style="margin-bottom:22px;">
+        <div class="card stat"><div class="num" id="statBuyers">0</div><div class="label">buyers tracked</div></div>
+        <div class="card stat"><div class="num" id="statHot">0</div><div class="label">hot leads</div></div>
+        <div class="card stat"><div class="num" id="statTasksToday">0</div><div class="label">tasks due today</div></div>
+      </div>
+      <div class="grid cols-2">
+        <div class="card" style="padding:18px 20px;">
+          <div class="section-title">today & overdue tasks</div>
+          <div id="dashTaskList"></div>
+        </div>
+        <div class="card" style="padding:18px 20px;">
+          <div class="section-title">hot leads</div>
+          <div id="dashHotList"></div>
+        </div>
+      </div>
+    </div>
+    <div class="page" id="page-buyers">
+      <div class="page-head">
+        <div><h1>buyers</h1><p>every buyer, their rating, and their offer history</p></div>
+        <button class="btn brick" onclick="openBuyerModal()">+ add buyer</button>
+      </div>
+      <div class="search-bar"><input id="buyerSearch" placeholder="search by name, city, state or address..." oninput="renderBuyers()"></div>
+      <div class="card" id="buyerList"></div>
+    </div>
+    <div class="page" id="page-leads">
+      <div class="page-head">
+        <div><h1>leads</h1><p>drag a card to move it through the pipeline</p></div>
+        <button class="btn brick" onclick="openBuyerModal()">+ add buyer</button>
+      </div>
+      <div class="leads-board" id="leadsBoard"></div>
+    </div>
+    <div class="page" id="page-wholesalers">
+      <div class="page-head">
+        <div><h1>wholesaler list</h1><p>drag a card across the pipeline, just like leads</p></div>
+        <div style="display:flex; gap:8px;">
+          <label class="btn ghost sm" style="margin:0;">upload csv (bulk add)<input type="file" accept=".csv" style="display:none;" onchange="importWholesalerCSV(this.files[0])"></label>
+          <button class="btn brick sm" onclick="openWholesalerModal()">+ add wholesaler</button>
+        </div>
+      </div>
+      <div class="leads-board" id="wholesalerBoard"></div>
+    </div>
+    <div class="page" id="page-acquisition">
+      <div class="page-head">
+        <div><h1>acquisition</h1><p>seller leads pipeline — upload photos, call recordings, and files</p></div>
+        <div style="display:flex; gap:8px;">
+          <label class="btn ghost sm" style="margin:0;">upload csv (bulk add)<input type="file" accept=".csv" style="display:none;" onchange="importAcquisitionCSV(this.files[0])"></label>
+          <button class="btn brick sm" onclick="openAcquisitionModal()">+ add lead</button>
+        </div>
+      </div>
+      <div class="leads-board" id="acquisitionBoard"></div>
+    </div>
+    <div class="page" id="page-deals">
+      <div class="page-head">
+        <div><h1>dispo deals</h1><p>each card is one property — click to open, see interested buyers, upload photos</p></div>
+        <button class="btn brick sm" onclick="openDealModal()">+ add deal</button>
+      </div>
+      <div class="grid cols-3" id="dealsList"></div>
+    </div>
+    <div class="page" id="page-offers">
+      <div class="page-head">
+        <div><h1>offers</h1><p>every offer, laid out by when it landed</p></div>
+      </div>
+      <div id="offersTimeline"></div>
+    </div>
+    <div class="page" id="page-tasks">
+      <div class="page-head">
+        <div><h1>tasks</h1><p>reminders you set for yourself</p></div>
+        <button class="btn brick" onclick="openTaskModal()">+ new task</button>
+      </div>
+      <div class="card" id="taskList"></div>
+    </div>
+    <div class="page" id="page-city">
+      <div class="page-head">
+        <div><h1>by city</h1><p>type any city in us or texas to filter instantly</p></div>
+      </div>
+      <div class="search-bar">
+        <input id="citySearch" list="cityDatalist" placeholder="type any city, e.g. dallas, tx or marfa, tx..." oninput="renderCityResults()">
+        <button class="btn ghost" onclick="renderCityResults()">search</button>
+      </div>
+      <datalist id="cityDatalist"></datalist>
+      <div class="card" id="cityResults"></div>
+    </div>
+    <div class="page" id="page-settings">
+      <div class="page-head"><div><h1>settings</h1><p>connect your gemini api key and manage data</p></div></div>
+      <div class="card" style="padding:20px 22px; max-width:520px;">
+        <div class="section-title">gemini api key</div>
+        <div class="field">
+          <input type="password" id="geminiKeyInput" placeholder="paste your gemini api key">
+          <div class="key-note">
+            get a free key at aistudio.google.com/apikey.
+            stored only in this browser local storage.
+          </div>
+        </div>
+        <button class="btn brick sm" onclick="saveGeminiKey()">save key</button>
+        <button class="btn ghost sm" onclick="testGeminiKey()">test connection</button>
+        <span id="keySavedNote" style="font-size:13px; color:var(--teal); margin-left:10px;"></span>
+      </div>
+      <div class="card" style="padding:20px 22px; max-width:520px; margin-top:16px;">
+        <div class="section-title">task notifications</div>
+        <p style="font-size:13.5px; color:var(--ink-soft); margin-top:0;">
+          enable browser notifications so dealbook alerts you when a task's due time arrives. the tab needs to stay open for this to work — browsers don't allow background notifications for a plain website.
+        </p>
+        <button class="btn brick sm" onclick="enableTaskNotifications()">enable notifications</button>
+        <span id="notifStatusNote" style="font-size:13px; color:var(--teal); margin-left:10px;"></span>
+      </div>
+      <div class="card" id="teamAccessCard" style="padding:20px 22px; max-width:560px; margin-top:16px; display:none;">
+        <div class="section-title">team access</div>
+        <p style="font-size:13.5px; color:var(--ink-soft); margin-top:0;">
+          invite teammates by email and choose exactly which sections they can see. only visible to you as the admin.
+          real enforcement also needs a matching Firestore security rule — see the note at the bottom.
+        </p>
+        <div class="field-row">
+          <div class="field"><label>teammate email</label><input id="teamEmailInput" placeholder="name@example.com"></div>
+        </div>
+        <div class="field">
+          <label>access</label>
+          <div class="flag-row" style="flex-wrap:wrap;">
+            <label class="flag-check"><input type="checkbox" id="teamFull" onchange="document.getElementById('teamModuleRow').style.display=this.checked?'none':'flex';"> full access (everything)</label>
+          </div>
+          <div class="flag-row" id="teamModuleRow" style="flex-wrap:wrap; margin-top:6px;">
+            <label class="flag-check"><input type="checkbox" class="team-mod" value="buyers"> buyers</label>
+            <label class="flag-check"><input type="checkbox" class="team-mod" value="leads"> leads</label>
+            <label class="flag-check"><input type="checkbox" class="team-mod" value="wholesalers"> wholesaler list</label>
+            <label class="flag-check"><input type="checkbox" class="team-mod" value="acquisition"> acquisition</label>
+            <label class="flag-check"><input type="checkbox" class="team-mod" value="deals"> dispo deals</label>
+            <label class="flag-check"><input type="checkbox" class="team-mod" value="offers"> offers</label>
+            <label class="flag-check"><input type="checkbox" class="team-mod" value="tasks"> tasks</label>
+            <label class="flag-check"><input type="checkbox" class="team-mod" value="city"> by city</label>
+          </div>
+        </div>
+        <button class="btn brick sm" onclick="addTeamAccess()">give access</button>
+        <div id="teamAccessList" style="margin-top:14px;"></div>
+      </div>
+      <div class="card" style="padding:20px 22px; max-width:520px; margin-top:16px;">
+        <div class="section-title">data</div>
+        <p style="font-size:13.5px; color:var(--ink-soft); margin-top:0;">everything is saved to firebase and local storage</p>
+        <button class="btn danger sm" onclick="if(confirm('erase all buyers and tasks?')){localStorage.clear();location.reload();}">erase all data</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="buyerModalBg">
+  <div class="modal">
+    <h2 id="buyerModalTitle">add buyer</h2>
+    <input type="hidden" id="buyerId">
+    <div class="field-row">
+      <div class="field"><label>name</label><input id="buyerName" placeholder="e.g. mike alvarez"></div>
+      <div class="field"><label>phone</label><input id="buyerPhone" placeholder="(214) 555-0192"></div>
+    </div>
+    <div class="field">
+      <label>address</label>
+      <input id="buyerAddress" placeholder="street address">
+    </div>
+    <div class="field-row">
+      <div class="field"><label>city</label><input id="buyerCity" list="modalCityDatalist" placeholder="any city, e.g. dallas, tx" oninput="onModalCityInput(this)"></div>
+      <div class="field"><label>state</label><input id="buyerState" placeholder="tx" maxlength="2" style="text-transform:uppercase;"></div>
+    </div>
+    <datalist id="modalCityDatalist"></datalist>
+    <div class="field">
+      <label>status</label>
+      <select id="buyerStatus">
+        <option value="hot">hot lead</option>
+        <option value="warm">warm</option>
+        <option value="cold">cold</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>rating</label>
+      <div class="rating-row">
+        <input type="range" min="1" max="10" value="7" id="buyerRating" oninput="document.getElementById('ratingNum').textContent=this.value">
+        <div class="rating-num" id="ratingNum">7</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>this buyer</label>
+      <div class="flag-row">
+        <label class="flag-check"><input type="checkbox" id="buyerSawShowing"> saw the house</label>
+        <label class="flag-check"><input type="checkbox" id="buyerMadeOffer"> made an offer</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>leads board</label>
+      <div class="flag-row">
+        <label class="flag-check"><input type="checkbox" id="buyerIsLead" checked onchange="document.getElementById('leadStageField').style.display=this.checked?'block':'none';"> also add to leads board (to follow up)</label>
+      </div>
+      <div class="field" id="leadStageField" style="margin-top:10px;">
+        <label>lead stage</label>
+        <select id="buyerLeadStage">
+          <option value="new">new lead</option>
+          <option value="voicemail">voicemail</option>
+          <option value="not_interested">not interested</option>
+          <option value="follow_up">follow up</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>favorite locations</label>
+      <input id="favInput" placeholder="type an area and press enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addFavChip();}">
+      <div class="chip-list" id="favChipList"></div>
+    </div>
+    <div class="field">
+      <label>notes</label>
+      <textarea id="buyerNotes" rows="2" placeholder="notes"></textarea>
+    </div>
+    <div class="field">
+      <label>offers / deals made</label>
+      <div id="offerListEdit"></div>
+      <div class="field-row" style="margin-top:8px;">
+        <input id="offerLocation" placeholder="property / area">
+        <input id="offerAmount" placeholder="amount">
+      </div>
+      <div class="field-row" style="margin-top:8px;">
+        <input id="offerDate" type="date">
+        <input id="offerNotes" placeholder="notes">
+      </div>
+      <button class="btn ghost sm" style="margin-top:8px;" onclick="addOfferToEdit()">+ add this offer</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeBuyerModal()">cancel</button>
+      <button class="btn danger" id="buyerDeleteBtn" style="display:none;" onclick="deleteBuyerFromModal()">delete</button>
+      <button class="btn brick" onclick="saveBuyer()">save buyer</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="taskModalBg">
+  <div class="modal" style="max-width:460px;">
+    <h2 id="taskModalTitle">new task</h2>
+    <input type="hidden" id="taskId">
+    <div class="field"><label>task</label><input id="taskTitle" placeholder="task title"></div>
+    <div class="field-row">
+      <div class="field"><label>date</label><input type="date" id="taskDate"></div>
+      <div class="field"><label>time</label><input type="time" id="taskTime"></div>
+    </div>
+    <div class="field">
+      <label>related buyer</label>
+      <select id="taskBuyer"><option value="">none</option></select>
+    </div>
+    <div class="field"><label>notes</label><textarea id="taskNotes" rows="2"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeTaskModal()">cancel</button>
+      <button class="btn danger" id="taskDeleteBtn" style="display:none;" onclick="deleteTaskFromModal()">delete</button>
+      <button class="btn brick" onclick="saveTask()">save task</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="wholesalerModalBg">
+  <div class="modal" style="max-width:480px;">
+    <h2 id="wholesalerModalTitle">add wholesaler</h2>
+    <input type="hidden" id="whId">
+    <div class="field-row">
+      <div class="field"><label>name</label><input id="whName"></div>
+      <div class="field"><label>phone</label><input id="whPhone"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>city</label><input id="whCity"></div>
+      <div class="field"><label>state</label><input id="whState" maxlength="2" style="text-transform:uppercase;"></div>
+    </div>
+    <div class="field"><label>stage</label>
+      <select id="whStage">
+        <option value="new">new</option>
+        <option value="voicemail">voicemail</option>
+        <option value="interested">interested</option>
+        <option value="follow_up">follow up</option>
+        <option value="not_interested">not interested</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>this wholesaler</label>
+      <div class="flag-row"><label class="flag-check"><input type="checkbox" id="whLeftText"> left a text</label></div>
+    </div>
+    <div class="field"><label>notes</label><textarea id="whNotes" rows="2"></textarea></div>
+    <div class="field"><label>attach a file (list, contract, etc.)</label><input type="file" id="whFile"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeWholesalerModal()">cancel</button>
+      <button class="btn danger" id="whDeleteBtn" style="display:none;" onclick="deleteWholesalerFromModal()">delete</button>
+      <button class="btn brick" onclick="saveWholesaler()">save</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="acquisitionModalBg">
+  <div class="modal" style="max-width:520px;">
+    <h2 id="acquisitionModalTitle">add acquisition lead</h2>
+    <input type="hidden" id="acqId">
+    <div class="field-row">
+      <div class="field"><label>name</label><input id="acqName"></div>
+      <div class="field"><label>phone</label><input id="acqPhone"></div>
+    </div>
+    <div class="field"><label>address</label><input id="acqAddress"></div>
+    <div class="field-row">
+      <div class="field"><label>city</label><input id="acqCity"></div>
+      <div class="field"><label>state</label><input id="acqState" maxlength="2" style="text-transform:uppercase;"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>stage</label>
+        <select id="acqStage">
+          <option value="new">new</option>
+          <option value="voicemail">voicemail</option>
+          <option value="callback">callback</option>
+          <option value="interested">interested</option>
+          <option value="follow_up">follow up</option>
+          <option value="not_interested">not interested</option>
+        </select>
+      </div>
+      <div class="field"><label>temperature</label>
+        <select id="acqTemp"><option value="hot">hot</option><option value="warm">warm</option><option value="cold">cold</option></select>
+      </div>
+    </div>
+    <div class="field"><label>notes</label><textarea id="acqNotes" rows="2"></textarea></div>
+    <div class="field"><label>house photos</label><input type="file" id="acqPhotos" accept="image/*" multiple></div>
+    <div class="chip-list" id="acqPhotoList"></div>
+    <div class="field"><label>call recording (audio file)</label><input type="file" id="acqRecording" accept="audio/*"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeAcquisitionModal()">cancel</button>
+      <button class="btn danger" id="acqDeleteBtn" style="display:none;" onclick="deleteAcquisitionFromModal()">delete</button>
+      <button class="btn brick" onclick="saveAcquisition()">save</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="dealModalBg">
+  <div class="modal" style="max-width:640px;">
+    <h2 id="dealModalTitle">add deal</h2>
+    <input type="hidden" id="dealId">
+    <div class="field"><label>property address / title</label><input id="dealTitle" placeholder="e.g. 4350 Northern Pike"></div>
+    <div class="field-row">
+      <div class="field"><label>expiration date</label><input type="date" id="dealExpiry"></div>
+      <div class="field"><label>contract price</label><input id="dealPrice" placeholder="$150,000"></div>
+    </div>
+    <div class="field"><label>info about the house</label><textarea id="dealDesc" rows="3"></textarea></div>
+    <div class="field"><label>photos</label><input type="file" id="dealPhotos" accept="image/*" multiple></div>
+    <div class="chip-list" id="dealPhotoList"></div>
+    <div class="field"><label>notes</label><textarea id="dealNotes" rows="2"></textarea></div>
+    <div class="field" id="dealBuyersSection" style="display:none;">
+      <label>interested buyers — drag between stages</label>
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <select id="dealBuyerPicker" style="flex:1;"><option value="">pick an existing buyer...</option></select>
+        <button class="btn ghost sm" onclick="addExistingBuyerToDeal()">add</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <input id="dealBuyerManualName" placeholder="or type a name not in your buyers list">
+        <input id="dealBuyerManualPhone" placeholder="phone" style="max-width:160px;">
+        <button class="btn ghost sm" onclick="addManualBuyerToDeal()">add</button>
+      </div>
+      <div class="leads-board" id="dealBuyersBoard" style="gap:10px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeDealModal()">cancel</button>
+      <button class="btn danger" id="dealDeleteBtn" style="display:none;" onclick="deleteDealFromModal()">delete</button>
+      <button class="btn brick" onclick="saveDeal()">save deal</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<button id="voiceBubble" onclick="toggleVoiceMode()" title="voice chat with gemini">🎙️</button>
+<button id="geminiBubble" onclick="toggleGeminiPanel()" title="ask gemini">✦</button>
+<div id="geminiPanel">
+  <div class="gp-head">
+    <div class="t">ask <span>gemini</span></div>
+    <button class="gp-close" onclick="toggleGeminiPanel()">✕</button>
+  </div>
+  <div id="aiKeyWarning"></div>
+  <div class="gp-log" id="aiLog"></div>
+  <div class="gp-input-row">
+    <textarea id="aiInput" placeholder="ask..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();askGemini();}"></textarea>
+    <button class="btn brick sm" onclick="askGemini()">send</button>
+  </div>
+</div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, getDocs, setDoc, getDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSy...",
+    authDomain: "hafez-3c500.firebaseapp.com",
+    projectId: "hafez-3c500",
+    storageBucket: "hafez-3c500.firebasestorage.app",
+    messagingSenderId: "123456789",
+    appId: "1:1234..."
+  };
+  const app = initializeApp(firebaseConfig);
+  window.db = getFirestore(app);
+  window.FirestoreModules = { collection, getDocs, setDoc, getDoc, doc, deleteDoc };
+  window.auth = getAuth(app);
+  window.AuthModules = { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut };
+  onAuthStateChanged(window.auth, (user)=>{
+    if (typeof handleAuthState === 'function') handleAuthState(user);
+  });
+</script>
+<script>
+const US_CITIES = [
+  "Dallas, TX", "Houston, TX", "Austin, TX", "San Antonio, TX", "Fort Worth, TX", "El Paso, TX", "Arlington, TX", "Corpus Christi, TX", "Plano, TX", "Laredo, TX", "Lubbock, TX", "Garland, TX", "Irving, TX", "Amarillo, TX", "Grand Prairie, TX", "McKinney, TX", "Frisco, TX", "Brownsville, TX", "Pasadena, TX", "Killeen, TX", "Mesodon, TX", "Denton, TX", "Waco, TX", "Midland, TX", "Carrollton, TX", "Round Rock, TX", "Abilene, TX", "Pearland, TX", "College Station, TX", "Richardson, TX", "The Woodlands, TX", "Beaumont, TX", "Odessa, TX", "Tyler, TX", "Wichita Falls, TX", "Lewisville, TX", "League City, TX", "San Angelo, TX", "Allen, TX", "Sugar Land, TX", "Edinburg, TX", "Conroe, TX", "Mission, TX", "Longview, TX", "Bryan, TX", "Pharr, TX", "Baytown, TX", "Missouri City, TX", "Temple, TX", "Flower Mound, TX", "New Braunfels, TX", "North Richland Hills, TX", "Victoria, TX", "Harlingen, TX", "Pflugerville, TX", "Grapevine, TX", "DeSoto, TX", "Marfa, TX", "Muleshoe, TX",
+  "New York, NY", "Los Angeles, CA", "Chicago, IL", "Phoenix, AZ", "Philadelphia, PA", "San Diego, CA", "San Jose, CA", "Jacksonville, FL", "Columbus, OH", "Indianapolis, IN", "Charlotte, NC", "San Francisco, CA", "Seattle, WA", "Denver, CO", "Washington, DC", "Boston, MA", "Nashville, TN", "Detroit, MI", "Oklahoma City, OK", "Portland, OR", "Las Vegas, NV", "Memphis, TN", "Louisville, KY", "Baltimore, MD", "Milwaukee, WI", "Albuquerque, NM", "Tucson, AZ", "Fresno, CA", "Sacramento, CA", "Kansas City, MO", "Mesa, AZ", "Atlanta, GA", "Omaha, NE", "Colorado Springs, CO", "Raleigh, NC", "Miami, FL", "Long Beach, CA", "Virginia Beach, VA", "Oakland, CA", "Minneapolis, MN", "Tulsa, OK", "Tampa, FL", "New Orleans, LA"
+];
+
+const LEAD_STAGES = [
+  { id:'new', label:'New Lead' },
+  { id:'voicemail', label:'Voicemail' },
+  { id:'not_interested', label:'Not Interested' },
+  { id:'follow_up', label:'Follow Up' }
+];
+
+const store = {
+  buyers: [],
+  tasks: [],
+  wholesalers: [],
+  acquisitions: [],
+  deals: []
+};
+
+async function loadDataFromFirebase() {
+  try {
+    if(!window.db || !window.FirestoreModules) return;
+    const { collection, getDocs } = window.FirestoreModules;
+    const buyersSnap = await getDocs(collection(window.db, 'buyers'));
+    store.buyers = buyersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const tasksSnap = await getDocs(collection(window.db, 'tasks'));
+    store.tasks = tasksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const whSnap = await getDocs(collection(window.db, 'wholesalers'));
+    store.wholesalers = whSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const acqSnap = await getDocs(collection(window.db, 'acquisitions'));
+    store.acquisitions = acqSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const dealsSnap = await getDocs(collection(window.db, 'deals'));
+    store.deals = dealsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderDashboard();
+    renderBuyers();
+    renderTasks();
+    renderLeadsBoard();
+    renderWholesalerBoard();
+    renderAcquisitionBoard();
+    renderDealsList();
+    populateCityDatalist();
+    renderCityResults();
+  } catch (e) {
+    console.error("error loading data: ", e);
+  }
+}
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- auth + team access ---------- */
+let currentUser = null;
+let myPermissions = { full:false, modules:{} };
+const ALL_MODULES = ['buyers','leads','wholesalers','acquisition','deals','offers','tasks','city'];
+function sanitizeEmailKey(email){ return String(email||'').toLowerCase().replace(/[^a-z0-9]/g,'_'); }
+
+function doGoogleSignIn(){
+  if(!window.auth || !window.AuthModules){ document.getElementById('authGateNote').textContent = 'firebase is still loading, try again in a second'; return; }
+  const { GoogleAuthProvider, signInWithPopup } = window.AuthModules;
+  signInWithPopup(window.auth, new GoogleAuthProvider()).catch(e=>{
+    document.getElementById('authGateNote').textContent = 'sign-in failed: ' + (e.message||e);
+  });
+}
+async function handleAuthState(user){
+  currentUser = user;
+  if(!user){
+    document.getElementById('authGate').style.display = 'flex';
+    document.getElementById('appRoot').style.display = 'none';
+    return;
+  }
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'flex';
+  await loadPermissions();
+  applyPermissionsToUI();
+  loadDataFromFirebase();
+}
+async function loadPermissions(){
+  try{
+    if(!window.db || !window.FirestoreModules){ myPermissions = { full:true, modules:{} }; return; }
+    const { doc, getDoc, setDoc } = window.FirestoreModules;
+    const adminSnap = await getDoc(doc(window.db, 'settings', 'adminEmails'));
+    let admins = adminSnap.exists() ? (adminSnap.data().emails||[]) : [];
+    if(admins.length===0){
+      // first person ever to sign in becomes the admin automatically
+      admins = [currentUser.email];
+      await setDoc(doc(window.db, 'settings', 'adminEmails'), { emails: admins });
+    }
+    const isAdmin = admins.map(e=>e.toLowerCase()).includes((currentUser.email||'').toLowerCase());
+    if(isAdmin){
+      myPermissions = { full:true, modules:{}, isAdmin:true };
+      return;
+    }
+    const accessSnap = await getDoc(doc(window.db, 'teamAccess', sanitizeEmailKey(currentUser.email)));
+    if(accessSnap.exists()){
+      const d = accessSnap.data();
+      myPermissions = { full: !!d.full, modules: d.modules||{}, isAdmin:false };
+    } else {
+      myPermissions = { full:false, modules:{}, isAdmin:false, noAccess:true };
+    }
+  } catch(e){
+    console.error('permission load error', e);
+    myPermissions = { full:true, modules:{} };
+  }
+}
+function canSee(moduleKey){
+  if(myPermissions.full) return true;
+  return !!myPermissions.modules[moduleKey];
+}
+function applyPermissionsToUI(){
+  document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
+    const page = item.dataset.page;
+    if(page==='dashboard' || page==='settings'){ item.style.display=''; return; }
+    item.style.display = canSee(page) ? '' : 'none';
+  });
+  document.getElementById('teamAccessCard').style.display = myPermissions.isAdmin ? 'block' : 'none';
+  if(myPermissions.noAccess && !myPermissions.isAdmin){
+    toast('your account has no access yet — ask your admin to add you in settings');
+  }
+  if(myPermissions.isAdmin) renderTeamAccessList();
+}
+async function addTeamAccess(){
+  const email = document.getElementById('teamEmailInput').value.trim().toLowerCase();
+  if(!email){ toast('enter an email'); return; }
+  const full = document.getElementById('teamFull').checked;
+  const modules = {};
+  document.querySelectorAll('.team-mod').forEach(cb=>{ modules[cb.value] = cb.checked; });
+  try{
+    const { doc, setDoc } = window.FirestoreModules;
+    await setDoc(doc(window.db, 'teamAccess', sanitizeEmailKey(email)), { email, full, modules, updatedAt: new Date().toISOString() });
+    toast('access saved for ' + email);
+    document.getElementById('teamEmailInput').value = '';
+    document.getElementById('teamFull').checked = false;
+    document.querySelectorAll('.team-mod').forEach(cb=>cb.checked=false);
+    document.getElementById('teamModuleRow').style.display = 'flex';
+    renderTeamAccessList();
+  } catch(e){ toast('could not save access: ' + e.message); }
+}
+async function renderTeamAccessList(){
+  const box = document.getElementById('teamAccessList');
+  if(!box) return;
+  try{
+    const { collection, getDocs } = window.FirestoreModules;
+    const snap = await getDocs(collection(window.db, 'teamAccess'));
+    const rows = snap.docs.map(d=>d.data());
+    if(!rows.length){ box.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">no teammates added yet</div>'; return; }
+    box.innerHTML = rows.map(r=>`
+      <div class="offer-item">
+        <div>
+          <div class="oline1">${esc(r.email)}</div>
+          <div class="onotes">${r.full ? 'full access' : 'access: ' + (Object.keys(r.modules||{}).filter(k=>r.modules[k]).join(', ') || 'none yet')}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e){ box.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">could not load team list</div>'; }
+}
+
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('page-'+item.dataset.page).classList.add('active');
+    if(item.dataset.page==='buyers') renderBuyers();
+    if(item.dataset.page==='tasks') renderTasks();
+    if(item.dataset.page==='dashboard') renderDashboard();
+    if(item.dataset.page==='offers') renderOffersTimeline();
+    if(item.dataset.page==='city') renderCityResults();
+    if(item.dataset.page==='leads') renderLeadsBoard();
+    if(item.dataset.page==='wholesalers') renderWholesalerBoard();
+    if(item.dataset.page==='acquisition') renderAcquisitionBoard();
+    if(item.dataset.page==='deals') renderDealsList();
+    if(item.dataset.page==='settings') loadSettingsUI();
+  });
+});
+
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function fmtDate(d){ return d.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'}); }
+document.getElementById('todayDate').textContent = fmtDate(new Date());
+function todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); }
+
+function populateCityDatalist(){
+  const dl = document.getElementById('cityDatalist');
+  const mdl = document.getElementById('modalCityDatalist');
+  const set = new Set(US_CITIES);
+  store.buyers.forEach(b=>{ if(b.city) set.add(b.city + (b.state? ', '+b.state : '')); });
+  const arr = Array.from(set).map(c=>`<option value="${esc(c)}">`).join('');
+  if(dl) dl.innerHTML = arr;
+  if(mdl) mdl.innerHTML = arr;
+}
+setTimeout(populateCityDatalist, 500);
+
+function onModalCityInput(inputEl){
+  const q = inputEl.value.toLowerCase().trim();
+  const mdl = document.getElementById('modalCityDatalist');
+  if(!mdl) return;
+  const set = new Set(US_CITIES);
+  store.buyers.forEach(b=>{ if(b.city) set.add(b.city + (b.state? ', '+b.state : '')); });
+  const matches = Array.from(set).filter(c => c.toLowerCase().includes(q));
+  mdl.innerHTML = matches.slice(0, 30).map(c=>`<option value="${esc(c)}">`).join('');
+}
+
+let editingFavs = [];
+let editingOffers = [];
+function openBuyerModal(buyerId){
+  document.getElementById('buyerModalBg').classList.add('show');
+  editingFavs = [];
+  editingOffers = [];
+  if(buyerId){
+    const b = store.buyers.find(x=>x.id===buyerId);
+    if(b){
+      document.getElementById('buyerModalTitle').textContent = 'edit buyer';
+      document.getElementById('buyerId').value = b.id;
+      document.getElementById('buyerName').value = b.name||'';
+      document.getElementById('buyerPhone').value = b.phone||'';
+      document.getElementById('buyerAddress').value = b.address||'';
+      document.getElementById('buyerCity').value = b.city||'';
+      document.getElementById('buyerState').value = b.state||'';
+      document.getElementById('buyerStatus').value = b.status||'hot';
+      document.getElementById('buyerRating').value = b.rating||7;
+      document.getElementById('ratingNum').textContent = b.rating||7;
+      document.getElementById('buyerSawShowing').checked = !!b.sawShowing;
+      document.getElementById('buyerMadeOffer').checked = !!b.madeOffer;
+      document.getElementById('buyerIsLead').checked = b.isLead !== false;
+      document.getElementById('buyerLeadStage').value = b.leadStage || 'new';
+      document.getElementById('leadStageField').style.display = document.getElementById('buyerIsLead').checked ? 'block' : 'none';
+      document.getElementById('buyerNotes').value = b.notes||'';
+      editingFavs = [...(b.favs||[])];
+      editingOffers = [...(b.offers||[])];
+      document.getElementById('buyerDeleteBtn').style.display = 'inline-flex';
+    }
+  } else {
+    document.getElementById('buyerModalTitle').textContent = 'add buyer';
+    document.getElementById('buyerId').value = '';
+    document.getElementById('buyerName').value = '';
+    document.getElementById('buyerPhone').value = '';
+    document.getElementById('buyerAddress').value = '';
+    document.getElementById('buyerCity').value = '';
+    document.getElementById('buyerState').value = '';
+    document.getElementById('buyerStatus').value = 'hot';
+    document.getElementById('buyerRating').value = 7;
+    document.getElementById('ratingNum').textContent = '7';
+    document.getElementById('buyerSawShowing').checked = false;
+    document.getElementById('buyerMadeOffer').checked = false;
+    document.getElementById('buyerIsLead').checked = true;
+    document.getElementById('buyerLeadStage').value = 'new';
+    document.getElementById('leadStageField').style.display = 'block';
+    document.getElementById('buyerNotes').value = '';
+    document.getElementById('buyerDeleteBtn').style.display = 'none';
+  }
+  renderFavChips();
+  renderOfferListEdit();
+}
+function closeBuyerModal(){ document.getElementById('buyerModalBg').classList.remove('show'); }
+function addFavChip(){
+  const inp = document.getElementById('favInput');
+  const val = inp.value.trim();
+  if(val && !editingFavs.includes(val)){ editingFavs.push(val); inp.value=''; renderFavChips(); }
+}
+function removeFavChip(idx){ editingFavs.splice(idx,1); renderFavChips(); }
+function renderFavChips(){
+  const list = document.getElementById('favChipList');
+  list.innerHTML = editingFavs.map((f,i)=>`<div class="chip">${esc(f)}<button onclick="removeFavChip(${i})">×</button></div>`).join('');
+}
+function addOfferToEdit(){
+  const loc = document.getElementById('offerLocation').value.trim();
+  const amt = document.getElementById('offerAmount').value.trim();
+  const dt = document.getElementById('offerDate').value;
+  const notes = document.getElementById('offerNotes').value.trim();
+  if(!loc || !amt) { toast('enter location and amount'); return; }
+  editingOffers.push({ id: uid(), location: loc, amount: amt, date: dt||todayStr(), notes: notes });
+  document.getElementById('offerLocation').value = '';
+  document.getElementById('offerAmount').value = '';
+  document.getElementById('offerDate').value = '';
+  document.getElementById('offerNotes').value = '';
+  renderOfferListEdit();
+}
+function removeOfferEdit(id){ editingOffers = editingOffers.filter(o=>o.id!==id); renderOfferListEdit(); }
+function renderOfferListEdit(){
+  const list = document.getElementById('offerListEdit');
+  if(!editingOffers.length){ list.innerHTML='<div style="font-size:12.5px;color:var(--ink-soft);">no offers added yet</div>'; return; }
+  list.innerHTML = editingOffers.map(o=>`
+    <div class="offer-item">
+      <div>
+        <div class="oline1">${esc(o.amount)} — ${esc(o.location)} (${esc(o.date)})</div>
+        ${o.notes? `<div class="onotes">${esc(o.notes)}</div>`:''}
+      </div>
+      <button onclick="removeOfferEdit('${o.id}')">×</button>
+    </div>
+  `).join('');
+}
+async function saveBuyer(){
+  const id = document.getElementById('buyerId').value || uid();
+  const name = document.getElementById('buyerName').value.trim();
+  if(!name){ toast('please enter a name'); return; }
+  const existing = store.buyers.find(b=>b.id===id);
+  const isLead = document.getElementById('buyerIsLead').checked;
+  const madeOfferChecked = document.getElementById('buyerMadeOffer').checked;
+  // if "made an offer" is checked but no offer row was filled in, auto-create a placeholder
+  // offer so it still shows up on the Offers page automatically.
+  if(madeOfferChecked && editingOffers.length===0){
+    editingOffers.push({
+      id: uid(),
+      location: document.getElementById('buyerAddress').value.trim() || document.getElementById('buyerCity').value.trim() || 'unspecified property',
+      amount: 'TBD',
+      date: todayStr(),
+      notes: 'auto-logged from "made an offer"'
+    });
+  }
+  const buyer = {
+    name: name,
+    phone: document.getElementById('buyerPhone').value.trim(),
+    address: document.getElementById('buyerAddress').value.trim(),
+    city: document.getElementById('buyerCity').value.trim(),
+    state: document.getElementById('buyerState').value.trim().toUpperCase(),
+    status: document.getElementById('buyerStatus').value,
+    rating: parseInt(document.getElementById('buyerRating').value)||7,
+    sawShowing: document.getElementById('buyerSawShowing').checked,
+    madeOffer: document.getElementById('buyerMadeOffer').checked,
+    isLead: isLead,
+    leadStage: document.getElementById('buyerLeadStage').value || 'new',
+    leadNote: existing ? (existing.leadNote || '') : '',
+    favs: editingFavs,
+    notes: document.getElementById('buyerNotes').value.trim(),
+    offers: editingOffers,
+    updatedAt: new Date().toISOString()
+  };
+  const idx = store.buyers.findIndex(b=>b.id===id);
+  if(idx>=0) store.buyers[idx] = { id, ...buyer };
+  else store.buyers.push({ id, ...buyer });
+  try {
+    if(window.db && window.FirestoreModules){
+      const { doc, setDoc } = window.FirestoreModules;
+      await setDoc(doc(window.db, 'buyers', id), buyer);
+    }
+  } catch(e){ console.error('firebase save error:', e); }
+  closeBuyerModal();
+  renderDashboard();
+  renderBuyers();
+  renderLeadsBoard();
+  populateCityDatalist();
+  renderCityResults();
+  toast(isLead ? 'buyer saved — added to leads board' : 'buyer saved successfully');
+}
+async function deleteBuyerFromModal(){
+  const id = document.getElementById('buyerId').value;
+  if(!id) return;
+  if(!confirm('delete this buyer?')) return;
+  store.buyers = store.buyers.filter(b=>b.id!==id);
+  try {
+    if(window.db && window.FirestoreModules){
+      const { doc, deleteDoc } = window.FirestoreModules;
+      await deleteDoc(doc(window.db, 'buyers', id));
+    }
+  } catch(e){ console.error('firebase delete error:', e); }
+  closeBuyerModal();
+  renderDashboard();
+  renderBuyers();
+  renderLeadsBoard();
+  populateCityDatalist();
+  renderCityResults();
+  toast('buyer deleted');
+}
+function openTaskModal(taskId){
+  document.getElementById('taskModalBg').classList.add('show');
+  const sel = document.getElementById('taskBuyer');
+  sel.innerHTML = '<option value="">none</option>' + store.buyers.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  if(taskId){
+    const t = store.tasks.find(x=>x.id===taskId);
+    if(t){
+      document.getElementById('taskModalTitle').textContent = 'edit task';
+      document.getElementById('taskId').value = t.id;
+      document.getElementById('taskTitle').value = t.title||'';
+      document.getElementById('taskDate').value = t.dueDate||'';
+      document.getElementById('taskTime').value = t.dueTime||'';
+      document.getElementById('taskBuyer').value = t.buyerId||'';
+      document.getElementById('taskNotes').value = t.notes||'';
+      document.getElementById('taskDeleteBtn').style.display = 'inline-flex';
+    }
+  } else {
+    document.getElementById('taskModalTitle').textContent = 'new task';
+    document.getElementById('taskId').value = '';
+    document.getElementById('taskTitle').value = '';
+    document.getElementById('taskDate').value = todayStr();
+    document.getElementById('taskTime').value = '';
+    document.getElementById('taskBuyer').value = '';
+    document.getElementById('taskNotes').value = '';
+    document.getElementById('taskDeleteBtn').style.display = 'none';
+  }
+}
+function closeTaskModal(){ document.getElementById('taskModalBg').classList.remove('show'); }
+async function saveTask(){
+  const id = document.getElementById('taskId').value || uid();
+  const title = document.getElementById('taskTitle').value.trim();
+  if(!title){ toast('please enter task title'); return; }
+  const task = {
+    title: title,
+    dueDate: document.getElementById('taskDate').value || todayStr(),
+    dueTime: document.getElementById('taskTime').value,
+    buyerId: document.getElementById('taskBuyer').value,
+    notes: document.getElementById('taskNotes').value.trim(),
+    done: false,
+    updatedAt: new Date().toISOString()
+  };
+  const idx = store.tasks.findIndex(t=>t.id===id);
+  if(idx>=0) task.done = store.tasks[idx].done;
+  if(idx>=0) store.tasks[idx] = { id, ...task };
+  else store.tasks.push({ id, ...task });
+  try {
+    if(window.db && window.FirestoreModules){
+      const { doc, setDoc } = window.FirestoreModules;
+      await setDoc(doc(window.db, 'tasks', id), task);
+    }
+  } catch(e){ console.error('firebase task save error:', e); }
+  closeTaskModal();
+  renderDashboard();
+  renderTasks();
+  toast('task saved');
+}
+async function toggleTaskDone(id){
+  const t = store.tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.done = !t.done;
+  try {
+    if(window.db && window.FirestoreModules){
+      const { doc, setDoc } = window.FirestoreModules;
+      await setDoc(doc(window.db, 'tasks', id), t, { merge: true });
+    }
+  } catch(e){}
+  renderDashboard();
+  renderTasks();
+}
+async function deleteTaskFromModal(){
+  const id = document.getElementById('taskId').value;
+  if(!id) return;
+  store.tasks = store.tasks.filter(t=>t.id!==id);
+  try {
+    if(window.db && window.FirestoreModules){
+      const { doc, deleteDoc } = window.FirestoreModules;
+      await deleteDoc(doc(window.db, 'tasks', id));
+    }
+  } catch(e){}
+  closeTaskModal();
+  renderDashboard();
+  renderTasks();
+  toast('task deleted');
+}
+function renderBuyers(){
+  const q = (document.getElementById('buyerSearch')?.value || '').toLowerCase();
+  const list = document.getElementById('buyerList');
+  const filtered = store.buyers.filter(b=>{
+    const txt = (b.name + ' ' + (b.city||'') + ' ' + (b.state||'') + ' ' + (b.address||'')).toLowerCase();
+    return txt.includes(q);
+  });
+  if(!filtered.length){
+    list.innerHTML = '<div class="empty">no buyers found</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(b=>`
+    <div class="buyer-row">
+      <div style="flex:1; min-width:0;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="buyer-name">${esc(b.name)}</span>
+          <span class="badge ${b.status}">${b.status}</span>
+          <span class="badge flag">★ ${b.rating}/10</span>
+        </div>
+        <div class="buyer-sub">${esc(b.phone||'no phone')} — ${esc(b.city||'no city')}, ${esc(b.state||'')}</div>
+      </div>
+      <div class="buyer-actions">
+        <button class="btn ghost sm" onclick="openBuyerModal('${b.id}')">edit</button>
+      </div>
+    </div>
+  `).join('');
+}
+function buyerNameById(id){
+  const b = store.buyers.find(x=>x.id===id);
+  return b ? b.name : '';
+}
+function renderTasks(){
+  const list = document.getElementById('taskList');
+  if(!store.tasks.length){ list.innerHTML='<div class="empty">no tasks yet</div>'; return; }
+  list.innerHTML = store.tasks.map(t=>`
+    <div class="task-row">
+      <div class="task-check ${t.done?'done':''}" onclick="toggleTaskDone('${t.id}')"></div>
+      <div class="task-body">
+        <div class="task-title ${t.done?'done':''}">${esc(t.title)}</div>
+        <div class="task-meta">${esc(t.dueDate)} ${t.dueTime? 'at '+esc(t.dueTime):''}${t.buyerId? ' — <span style="color:var(--teal);font-weight:600;">@'+esc(buyerNameById(t.buyerId))+'</span>':''}</div>
+      </div>
+      <button class="btn ghost sm" onclick="openTaskModal('${t.id}')">edit</button>
+    </div>
+  `).join('');
+}
+function renderDashboard(){
+  document.getElementById('statBuyers').textContent = store.buyers.length;
+  document.getElementById('statHot').textContent = store.buyers.filter(b=>b.status==='hot').length;
+  const today = todayStr();
+  const dueToday = store.tasks.filter(t=>!t.done && t.dueDate===today);
+  document.getElementById('statTasksToday').textContent = dueToday.length;
+  const overdue = store.tasks.filter(t=>!t.done && t.dueDate && t.dueDate < today);
+  const relevant = [...overdue, ...dueToday];
+  const dashTaskList = document.getElementById('dashTaskList');
+  if(!relevant.length){
+    dashTaskList.innerHTML = '<div class="empty">no tasks due today</div>';
+  } else {
+    dashTaskList.innerHTML = relevant.slice(0,5).map(t=>`
+      <div class="task-row">
+        <div class="task-check ${t.done?'done':''}" onclick="toggleTaskDone('${t.id}')"></div>
+        <div class="task-body">
+          <div class="task-title">${esc(t.title)}</div>
+          <div class="task-meta">${esc(t.dueDate)}${t.buyerId? ' — <span style="color:var(--teal);font-weight:600;">@'+esc(buyerNameById(t.buyerId))+'</span>':''}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  const hotList = store.buyers.filter(b=>b.status==='hot');
+  const dashHotList = document.getElementById('dashHotList');
+  if(!hotList.length){
+    dashHotList.innerHTML = '<div class="empty">no hot leads</div>';
+  } else {
+    dashHotList.innerHTML = hotList.slice(0,5).map(b=>`
+      <div class="buyer-row">
+        <div style="flex:1;">
+          <div class="buyer-name">${esc(b.name)}</div>
+          <div class="buyer-sub">${esc(b.city||'')}, ${esc(b.state||'')}</div>
+        </div>
+        <button class="btn ghost sm" onclick="openBuyerModal('${b.id}')">view</button>
+      </div>
+    `).join('');
+  }
+}
+function renderOffersTimeline(){
+  const container = document.getElementById('offersTimeline');
+  let allOffers = [];
+  store.buyers.forEach(b=>{
+    if(b.offers){
+      b.offers.forEach(o=>{
+        allOffers.push({ ...o, buyerName: b.name, buyerId: b.id });
+      });
+    }
+  });
+  if(!allOffers.length){
+    container.innerHTML = '<div class="card"><div class="empty">no offers recorded yet</div></div>';
+    return;
+  }
+  allOffers.sort((a,b)=>b.date.localeCompare(a.date));
+  container.innerHTML = `
+    <div class="card">
+      ${allOffers.map(o=>`
+        <div class="buyer-row">
+          <div>
+            <div style="font-weight:700; font-size:15px;">${esc(o.amount)} — ${esc(o.location)}</div>
+            <div class="buyer-sub">buyer: ${esc(o.buyerName)} | date: ${esc(o.date)}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+/* ---------- leads kanban board ---------- */
+let dragLeadId = null;
+function renderLeadsBoard(){
+  const board = document.getElementById('leadsBoard');
+  if(!board) return;
+  const leads = store.buyers.filter(b=>b.isLead !== false);
+  board.innerHTML = LEAD_STAGES.map(stage=>{
+    const items = leads.filter(b=>(b.leadStage||'new')===stage.id);
+    return `
+      <div class="lead-col stage-${stage.id}">
+        <div class="lead-col-head">
+          <div class="title">${esc(stage.label)}</div>
+          <div class="count">${items.length}</div>
+        </div>
+        <div class="lead-col-body" data-stage="${stage.id}"
+             ondragover="onLeadDragOver(event)" ondragleave="onLeadDragLeave(event)" ondrop="onLeadDrop(event,'${stage.id}')">
+          ${items.length ? items.map(b=>`
+            <div class="lead-card" draggable="true" data-id="${b.id}"
+                 ondragstart="onLeadDragStart(event,'${b.id}')" ondragend="onLeadDragEnd(event)"
+                 onclick="if(!event.target.closest('.lc-note') && !event.target.closest('.lc-call')) openBuyerModal('${b.id}')">
+              <div class="lc-name">${esc(b.name)}</div>
+              <div class="lc-sub">${esc(b.city||'no city')}${b.state? ', '+esc(b.state):''} — ${esc(b.phone||'no phone')}</div>
+              <div class="lc-badges">
+                <span class="badge ${b.status}">${esc(b.status)}</span>
+                <span class="badge flag">★ ${b.rating||7}/10</span>
+              </div>
+              <div class="lc-call">
+                <button onclick="event.stopPropagation(); logLeadCall('${b.id}')">☎ log call</button>
+                <span class="cnt">${b.callCount||0} call${(b.callCount||0)===1?'':'s'} logged</span>
+              </div>
+              <textarea class="lc-note" placeholder="add a note..." onclick="event.stopPropagation()" onchange="saveLeadNote('${b.id}', this.value)">${esc(b.leadNote||'')}</textarea>
+            </div>
+          `).join('') : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+function onLeadDragStart(ev, id){
+  dragLeadId = id;
+  ev.target.classList.add('dragging');
+  ev.dataTransfer.effectAllowed = 'move';
+  try{ ev.dataTransfer.setData('text/plain', id); }catch(e){}
+}
+function onLeadDragEnd(ev){
+  ev.target.classList.remove('dragging');
+  document.querySelectorAll('.lead-col-body').forEach(el=>el.classList.remove('drag-over'));
+}
+function onLeadDragOver(ev){
+  ev.preventDefault();
+  ev.currentTarget.classList.add('drag-over');
+}
+function onLeadDragLeave(ev){
+  ev.currentTarget.classList.remove('drag-over');
+}
+async function onLeadDrop(ev, stageId){
+  ev.preventDefault();
+  ev.currentTarget.classList.remove('drag-over');
+  const id = dragLeadId || ev.dataTransfer.getData('text/plain');
+  dragLeadId = null;
+  if(!id) return;
+  const b = store.buyers.find(x=>x.id===id);
+  if(!b || (b.leadStage||'new')===stageId) return;
+  b.leadStage = stageId;
+  b.updatedAt = new Date().toISOString();
+  renderLeadsBoard();
+  try {
+    if(window.db && window.FirestoreModules){
+      const { doc, setDoc } = window.FirestoreModules;
+      await setDoc(doc(window.db, 'buyers', id), { leadStage: stageId, updatedAt: b.updatedAt }, { merge:true });
+    }
+  } catch(e){ console.error('firebase stage save error:', e); }
+}
+async function saveLeadNote(id, note){
+  const b = store.buyers.find(x=>x.id===id);
+  if(!b) return;
+  b.leadNote = note;
+  try {
+    if(window.db && window.FirestoreModules){
+      const { doc, setDoc } = window.FirestoreModules;
+      await setDoc(doc(window.db, 'buyers', id), { leadNote: note }, { merge:true });
+    }
+  } catch(e){ console.error('firebase note save error:', e); }
+}
+// call counter is independent of the stage: every click logs one more attempt,
+// even multiple calls made while the lead sits in the same stage (e.g. voicemail twice).
+async function logLeadCall(id){
+  const b = store.buyers.find(x=>x.id===id);
+  if(!b) return;
+  b.callCount = (b.callCount||0) + 1;
+  renderLeadsBoard();
+  toast(`logged call #${b.callCount} for ${b.name}`);
+  try {
+    if(window.db && window.FirestoreModules){
+      const { doc, setDoc } = window.FirestoreModules;
+      await setDoc(doc(window.db, 'buyers', id), { callCount: b.callCount }, { merge:true });
+    }
+  } catch(e){ console.error('firebase call count save error:', e); }
+}
+
+/* ---------- shared file helpers ---------- */
+function fileToDataURL(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+function parseCSVRows(text){
+  return text.split(/\r?\n/).filter(l=>l.trim().length).map(line=>line.split(',').map(c=>c.trim().replace(/^"|"$/g,'')));
+}
+function mapCSVColumns(rows){
+  const header = rows[0].map(h=>h.toLowerCase());
+  const looksLikeHeader = header.includes('name');
+  const map = looksLikeHeader
+    ? { name: header.indexOf('name'), phone: header.indexOf('phone'), city: header.indexOf('city'), state: header.indexOf('state'), notes: header.indexOf('notes') }
+    : { name:0, phone:1, city:2, state:3, notes:4 };
+  return { start: looksLikeHeader ? 1 : 0, map };
+}
+
+/* ---------- wholesaler list (same pipeline idea as leads) ---------- */
+const WHOLESALER_STAGES = [
+  { id:'new', label:'New' },
+  { id:'voicemail', label:'Voicemail' },
+  { id:'interested', label:'Interested' },
+  { id:'follow_up', label:'Follow Up' },
+  { id:'not_interested', label:'Not Interested' }
+];
+function renderWholesalerBoard(){
+  const board = document.getElementById('wholesalerBoard');
+  if(!board) return;
+  board.innerHTML = WHOLESALER_STAGES.map(stage=>{
+    const items = store.wholesalers.filter(w=>(w.stage||'new')===stage.id);
+    return `
+      <div class="lead-col stage-${stage.id}">
+        <div class="lead-col-head"><div class="title">${esc(stage.label)}</div><div class="count">${items.length}</div></div>
+        <div class="lead-col-body" data-stage="${stage.id}" ondragover="onWhDragOver(event)" ondragleave="onWhDragLeave(event)" ondrop="onWhDrop(event,'${stage.id}')">
+          ${items.map(w=>`
+            <div class="lead-card" draggable="true" ondragstart="onWhDragStart(event,'${w.id}')" ondragend="onWhDragEnd(event)"
+                 onclick="if(!event.target.closest('.lc-call') && !event.target.closest('a')) openWholesalerModal('${w.id}')">
+              <div class="lc-name">${esc(w.name)}</div>
+              <div class="lc-sub">${esc(w.city||'')}${w.state? ', '+esc(w.state):''} — ${esc(w.phone||'no phone')}</div>
+              <div class="lc-badges">${w.leftText ? '<span class="badge warm">texted ✓</span>' : ''}${w.fileName ? '<span class="badge cold">📎 '+esc(w.fileName)+'</span>' : ''}</div>
+              <div class="lc-call">
+                <button onclick="event.stopPropagation(); logWholesalerCall('${w.id}')">☎ log call</button>
+                <span class="cnt">${w.callCount||0} call${(w.callCount||0)===1?'':'s'}</span>
+              </div>
+              ${w.notes? `<div class="lc-sub" style="margin-top:6px;">${esc(w.notes)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+let dragWhId = null;
+function onWhDragStart(ev,id){ dragWhId=id; ev.target.classList.add('dragging'); }
+function onWhDragEnd(ev){ ev.target.classList.remove('dragging'); document.querySelectorAll('.lead-col-body').forEach(el=>el.classList.remove('drag-over')); }
+function onWhDragOver(ev){ ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+function onWhDragLeave(ev){ ev.currentTarget.classList.remove('drag-over'); }
+async function onWhDrop(ev, stageId){
+  ev.preventDefault(); ev.currentTarget.classList.remove('drag-over');
+  const id = dragWhId; dragWhId=null;
+  const w = store.wholesalers.find(x=>x.id===id);
+  if(!w || (w.stage||'new')===stageId) return;
+  w.stage = stageId;
+  renderWholesalerBoard();
+  try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'wholesalers',id),{stage:stageId},{merge:true}); }catch(e){}
+}
+async function logWholesalerCall(id){
+  const w = store.wholesalers.find(x=>x.id===id);
+  if(!w) return;
+  w.callCount = (w.callCount||0)+1;
+  renderWholesalerBoard();
+  try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'wholesalers',id),{callCount:w.callCount},{merge:true}); }catch(e){}
+}
+function openWholesalerModal(id){
+  document.getElementById('wholesalerModalBg').classList.add('show');
+  const w = id ? store.wholesalers.find(x=>x.id===id) : null;
+  document.getElementById('wholesalerModalTitle').textContent = w ? 'edit wholesaler' : 'add wholesaler';
+  document.getElementById('whId').value = w ? w.id : '';
+  document.getElementById('whName').value = w ? w.name||'' : '';
+  document.getElementById('whPhone').value = w ? w.phone||'' : '';
+  document.getElementById('whCity').value = w ? w.city||'' : '';
+  document.getElementById('whState').value = w ? w.state||'' : '';
+  document.getElementById('whStage').value = w ? w.stage||'new' : 'new';
+  document.getElementById('whLeftText').checked = w ? !!w.leftText : false;
+  document.getElementById('whNotes').value = w ? w.notes||'' : '';
+  document.getElementById('whFile').value = '';
+  document.getElementById('whDeleteBtn').style.display = w ? 'inline-flex' : 'none';
+}
+function closeWholesalerModal(){ document.getElementById('wholesalerModalBg').classList.remove('show'); }
+async function saveWholesaler(){
+  const id = document.getElementById('whId').value || uid();
+  const name = document.getElementById('whName').value.trim();
+  if(!name){ toast('enter a name'); return; }
+  const existing = store.wholesalers.find(x=>x.id===id);
+  let fileName = existing?.fileName||'', fileData = existing?.fileData||'';
+  const fileInput = document.getElementById('whFile');
+  if(fileInput.files[0]){
+    fileName = fileInput.files[0].name;
+    try{ fileData = await fileToDataURL(fileInput.files[0]); }catch(e){}
+  }
+  const w = {
+    name, phone: document.getElementById('whPhone').value.trim(),
+    city: document.getElementById('whCity').value.trim(), state: document.getElementById('whState').value.trim().toUpperCase(),
+    stage: document.getElementById('whStage').value, leftText: document.getElementById('whLeftText').checked,
+    notes: document.getElementById('whNotes').value.trim(), callCount: existing?.callCount||0,
+    fileName, fileData, updatedAt: new Date().toISOString()
+  };
+  const idx = store.wholesalers.findIndex(x=>x.id===id);
+  if(idx>=0) store.wholesalers[idx] = { id, ...w }; else store.wholesalers.push({ id, ...w });
+  try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'wholesalers',id), w); }catch(e){ console.error(e); }
+  closeWholesalerModal(); renderWholesalerBoard(); toast('wholesaler saved');
+}
+async function deleteWholesalerFromModal(){
+  const id = document.getElementById('whId').value;
+  if(!id || !confirm('delete this wholesaler?')) return;
+  store.wholesalers = store.wholesalers.filter(x=>x.id!==id);
+  try{ const {doc,deleteDoc}=window.FirestoreModules; await deleteDoc(doc(window.db,'wholesalers',id)); }catch(e){}
+  closeWholesalerModal(); renderWholesalerBoard(); toast('deleted');
+}
+async function importWholesalerCSV(file){
+  if(!file) return;
+  const text = await file.text();
+  const rows = parseCSVRows(text);
+  if(!rows.length){ toast('empty file'); return; }
+  const { start, map } = mapCSVColumns(rows);
+  let added = 0;
+  for(let i=start;i<rows.length;i++){
+    const r = rows[i];
+    const name = map.name>=0 ? r[map.name] : r[0];
+    if(!name) continue;
+    const id = uid();
+    const w = {
+      name, phone: map.phone>=0? (r[map.phone]||'') : '', city: map.city>=0? (r[map.city]||'') : '',
+      state: map.state>=0? (r[map.state]||'') : '', notes: map.notes>=0? (r[map.notes]||'') : '',
+      stage:'new', callCount:0, leftText:false, fileName:'', fileData:'', updatedAt: new Date().toISOString()
+    };
+    store.wholesalers.push({ id, ...w });
+    try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'wholesalers',id), w); }catch(e){}
+    added++;
+  }
+  renderWholesalerBoard();
+  toast(`imported ${added} wholesalers into New`);
+}
+
+/* ---------- acquisition (seller leads) pipeline ---------- */
+const ACQUISITION_STAGES = [
+  { id:'new', label:'New' },
+  { id:'voicemail', label:'Voicemail' },
+  { id:'callback', label:'Callback' },
+  { id:'interested', label:'Interested' },
+  { id:'follow_up', label:'Follow Up' },
+  { id:'not_interested', label:'Not Interested' }
+];
+function renderAcquisitionBoard(){
+  const board = document.getElementById('acquisitionBoard');
+  if(!board) return;
+  board.innerHTML = ACQUISITION_STAGES.map(stage=>{
+    const items = store.acquisitions.filter(a=>(a.stage||'new')===stage.id);
+    return `
+      <div class="lead-col stage-${stage.id}">
+        <div class="lead-col-head"><div class="title">${esc(stage.label)}</div><div class="count">${items.length}</div></div>
+        <div class="lead-col-body" data-stage="${stage.id}" ondragover="onAcqDragOver(event)" ondragleave="onAcqDragLeave(event)" ondrop="onAcqDrop(event,'${stage.id}')">
+          ${items.map(a=>`
+            <div class="lead-card" draggable="true" ondragstart="onAcqDragStart(event,'${a.id}')" ondragend="onAcqDragEnd(event)"
+                 onclick="if(!event.target.closest('.lc-call')) openAcquisitionModal('${a.id}')">
+              <div class="lc-name">${esc(a.name)}</div>
+              <div class="lc-sub">${esc(a.address||a.city||'no address')}${a.state? ', '+esc(a.state):''} — ${esc(a.phone||'no phone')}</div>
+              <div class="lc-badges">
+                <span class="badge ${a.temp||'warm'}">${esc(a.temp||'warm')}</span>
+                ${(a.photos&&a.photos.length)? `<span class="badge cold">📷 ${a.photos.length}</span>`:''}
+                ${a.recordingName? `<span class="badge cold">🎙 recording</span>`:''}
+              </div>
+              <div class="lc-call">
+                <button onclick="event.stopPropagation(); logAcquisitionCall('${a.id}')">☎ log call</button>
+                <span class="cnt">${a.callCount||0} call${(a.callCount||0)===1?'':'s'}</span>
+              </div>
+              ${a.notes? `<div class="lc-sub" style="margin-top:6px;">${esc(a.notes)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+let dragAcqId = null;
+function onAcqDragStart(ev,id){ dragAcqId=id; ev.target.classList.add('dragging'); }
+function onAcqDragEnd(ev){ ev.target.classList.remove('dragging'); document.querySelectorAll('.lead-col-body').forEach(el=>el.classList.remove('drag-over')); }
+function onAcqDragOver(ev){ ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+function onAcqDragLeave(ev){ ev.currentTarget.classList.remove('drag-over'); }
+async function onAcqDrop(ev, stageId){
+  ev.preventDefault(); ev.currentTarget.classList.remove('drag-over');
+  const id = dragAcqId; dragAcqId=null;
+  const a = store.acquisitions.find(x=>x.id===id);
+  if(!a || (a.stage||'new')===stageId) return;
+  a.stage = stageId;
+  renderAcquisitionBoard();
+  try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'acquisitions',id),{stage:stageId},{merge:true}); }catch(e){}
+}
+async function logAcquisitionCall(id){
+  const a = store.acquisitions.find(x=>x.id===id);
+  if(!a) return;
+  a.callCount = (a.callCount||0)+1;
+  renderAcquisitionBoard();
+  try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'acquisitions',id),{callCount:a.callCount},{merge:true}); }catch(e){}
+}
+let editingAcqPhotos = [];
+function openAcquisitionModal(id){
+  document.getElementById('acquisitionModalBg').classList.add('show');
+  const a = id ? store.acquisitions.find(x=>x.id===id) : null;
+  editingAcqPhotos = a ? [...(a.photos||[])] : [];
+  document.getElementById('acquisitionModalTitle').textContent = a ? 'edit acquisition lead' : 'add acquisition lead';
+  document.getElementById('acqId').value = a ? a.id : '';
+  document.getElementById('acqName').value = a ? a.name||'' : '';
+  document.getElementById('acqPhone').value = a ? a.phone||'' : '';
+  document.getElementById('acqAddress').value = a ? a.address||'' : '';
+  document.getElementById('acqCity').value = a ? a.city||'' : '';
+  document.getElementById('acqState').value = a ? a.state||'' : '';
+  document.getElementById('acqStage').value = a ? a.stage||'new' : 'new';
+  document.getElementById('acqTemp').value = a ? a.temp||'warm' : 'warm';
+  document.getElementById('acqNotes').value = a ? a.notes||'' : '';
+  document.getElementById('acqPhotos').value = '';
+  document.getElementById('acqRecording').value = '';
+  document.getElementById('acqDeleteBtn').style.display = a ? 'inline-flex' : 'none';
+  renderAcqPhotoList();
+}
+function renderAcqPhotoList(){
+  document.getElementById('acqPhotoList').innerHTML = editingAcqPhotos.map((p,i)=>`<div class="chip">photo ${i+1}<button onclick="editingAcqPhotos.splice(${i},1); renderAcqPhotoList();">×</button></div>`).join('');
+}
+function closeAcquisitionModal(){ document.getElementById('acquisitionModalBg').classList.remove('show'); }
+async function saveAcquisition(){
+  const id = document.getElementById('acqId').value || uid();
+  const name = document.getElementById('acqName').value.trim();
+  if(!name){ toast('enter a name'); return; }
+  const existing = store.acquisitions.find(x=>x.id===id);
+  const photoInput = document.getElementById('acqPhotos');
+  for(const f of photoInput.files){ try{ editingAcqPhotos.push(await fileToDataURL(f)); }catch(e){} }
+  let recordingName = existing?.recordingName||'', recordingData = existing?.recordingData||'';
+  const recInput = document.getElementById('acqRecording');
+  if(recInput.files[0]){ recordingName = recInput.files[0].name; try{ recordingData = await fileToDataURL(recInput.files[0]); }catch(e){} }
+  const a = {
+    name, phone: document.getElementById('acqPhone').value.trim(), address: document.getElementById('acqAddress').value.trim(),
+    city: document.getElementById('acqCity').value.trim(), state: document.getElementById('acqState').value.trim().toUpperCase(),
+    stage: document.getElementById('acqStage').value, temp: document.getElementById('acqTemp').value,
+    notes: document.getElementById('acqNotes').value.trim(), callCount: existing?.callCount||0,
+    photos: editingAcqPhotos, recordingName, recordingData, updatedAt: new Date().toISOString()
+  };
+  const idx = store.acquisitions.findIndex(x=>x.id===id);
+  if(idx>=0) store.acquisitions[idx] = { id, ...a }; else store.acquisitions.push({ id, ...a });
+  try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'acquisitions',id), a); }
+  catch(e){ console.error(e); toast('saved locally — file(s) may be too large for firebase sync'); }
+  closeAcquisitionModal(); renderAcquisitionBoard(); toast('acquisition lead saved');
+}
+async function deleteAcquisitionFromModal(){
+  const id = document.getElementById('acqId').value;
+  if(!id || !confirm('delete this lead?')) return;
+  store.acquisitions = store.acquisitions.filter(x=>x.id!==id);
+  try{ const {doc,deleteDoc}=window.FirestoreModules; await deleteDoc(doc(window.db,'acquisitions',id)); }catch(e){}
+  closeAcquisitionModal(); renderAcquisitionBoard(); toast('deleted');
+}
+async function importAcquisitionCSV(file){
+  if(!file) return;
+  const text = await file.text();
+  const rows = parseCSVRows(text);
+  if(!rows.length){ toast('empty file'); return; }
+  const { start, map } = mapCSVColumns(rows);
+  let added = 0;
+  for(let i=start;i<rows.length;i++){
+    const r = rows[i];
+    const name = map.name>=0 ? r[map.name] : r[0];
+    if(!name) continue;
+    const id = uid();
+    const a = {
+      name, phone: map.phone>=0? (r[map.phone]||'') : '', address:'', city: map.city>=0? (r[map.city]||'') : '',
+      state: map.state>=0? (r[map.state]||'') : '', notes: map.notes>=0? (r[map.notes]||'') : '',
+      stage:'new', temp:'warm', callCount:0, photos:[], recordingName:'', recordingData:'', updatedAt: new Date().toISOString()
+    };
+    store.acquisitions.push({ id, ...a });
+    try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'acquisitions',id), a); }catch(e){}
+    added++;
+  }
+  renderAcquisitionBoard();
+  toast(`imported ${added} leads into New`);
+}
+
+/* ---------- dispo deals ---------- */
+function renderDealsList(){
+  const list = document.getElementById('dealsList');
+  if(!list) return;
+  if(!store.deals.length){ list.innerHTML = '<div class="card"><div class="empty">no deals yet</div></div>'; return; }
+  list.innerHTML = store.deals.map(d=>`
+    <div class="card" style="padding:16px; cursor:pointer;" onclick="openDealModal('${d.id}')">
+      ${d.photos && d.photos.length ? `<img src="${d.photos[0]}" style="width:100%; height:130px; object-fit:cover; border-radius:5px; margin-bottom:10px;">` : ''}
+      <div style="font-weight:700; font-size:15.5px;">${esc(d.title||'untitled deal')}</div>
+      <div class="buyer-sub" style="margin-top:4px;">${esc(d.contractPrice||'price tbd')} ${d.expiryDate? '— expires '+esc(d.expiryDate):''}</div>
+      <div class="buyer-sub" style="margin-top:2px;">${(d.buyers||[]).length} interested buyer${(d.buyers||[]).length===1?'':'s'}</div>
+    </div>
+  `).join('');
+}
+let editingDealPhotos = [];
+let editingDealBuyers = [];
+function openDealModal(id){
+  document.getElementById('dealModalBg').classList.add('show');
+  const d = id ? store.deals.find(x=>x.id===id) : null;
+  editingDealPhotos = d ? [...(d.photos||[])] : [];
+  editingDealBuyers = d ? [...(d.buyers||[])] : [];
+  document.getElementById('dealModalTitle').textContent = d ? 'edit deal' : 'add deal';
+  document.getElementById('dealId').value = d ? d.id : '';
+  document.getElementById('dealTitle').value = d ? d.title||'' : '';
+  document.getElementById('dealExpiry').value = d ? d.expiryDate||'' : '';
+  document.getElementById('dealPrice').value = d ? d.contractPrice||'' : '';
+  document.getElementById('dealDesc').value = d ? d.description||'' : '';
+  document.getElementById('dealNotes').value = d ? d.notes||'' : '';
+  document.getElementById('dealPhotos').value = '';
+  document.getElementById('dealDeleteBtn').style.display = d ? 'inline-flex' : 'none';
+  document.getElementById('dealBuyersSection').style.display = d ? 'block' : 'none';
+  const picker = document.getElementById('dealBuyerPicker');
+  picker.innerHTML = '<option value="">pick an existing buyer...</option>' + store.buyers.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  renderDealPhotoList();
+  renderDealBuyersBoard();
+}
+function renderDealPhotoList(){
+  document.getElementById('dealPhotoList').innerHTML = editingDealPhotos.map((p,i)=>`<div class="chip">photo ${i+1}<button onclick="editingDealPhotos.splice(${i},1); renderDealPhotoList();">×</button></div>`).join('');
+}
+function closeDealModal(){ document.getElementById('dealModalBg').classList.remove('show'); }
+async function saveDeal(){
+  const id = document.getElementById('dealId').value || uid();
+  const title = document.getElementById('dealTitle').value.trim();
+  if(!title){ toast('enter a property address / title'); return; }
+  const photoInput = document.getElementById('dealPhotos');
+  for(const f of photoInput.files){ try{ editingDealPhotos.push(await fileToDataURL(f)); }catch(e){} }
+  const d = {
+    title, expiryDate: document.getElementById('dealExpiry').value, contractPrice: document.getElementById('dealPrice').value.trim(),
+    description: document.getElementById('dealDesc').value.trim(), notes: document.getElementById('dealNotes').value.trim(),
+    photos: editingDealPhotos, buyers: editingDealBuyers, updatedAt: new Date().toISOString()
+  };
+  const idx = store.deals.findIndex(x=>x.id===id);
+  if(idx>=0) store.deals[idx] = { id, ...d }; else store.deals.push({ id, ...d });
+  try{ const {doc,setDoc}=window.FirestoreModules; await setDoc(doc(window.db,'deals',id), d); }
+  catch(e){ console.error(e); toast('saved locally — photos may be too large for firebase sync'); }
+  closeDealModal(); renderDealsList(); toast('deal saved');
+}
+async function deleteDealFromModal(){
+  const id = document.getElementById('dealId').value;
+  if(!id || !confirm('delete this deal?')) return;
+  store.deals = store.deals.filter(x=>x.id!==id);
+  try{ const {doc,deleteDoc}=window.FirestoreModules; await deleteDoc(doc(window.db,'deals',id)); }catch(e){}
+  closeDealModal(); renderDealsList(); toast('deleted');
+}
+function addExistingBuyerToDeal(){
+  const sel = document.getElementById('dealBuyerPicker');
+  const id = sel.value;
+  if(!id) return;
+  const b = store.buyers.find(x=>x.id===id);
+  if(!b) return;
+  editingDealBuyers.push({ id: uid(), buyerId: b.id, name: b.name, phone: b.phone||'', stage:'interested' });
+  sel.value = '';
+  renderDealBuyersBoard();
+}
+function addManualBuyerToDeal(){
+  const name = document.getElementById('dealBuyerManualName').value.trim();
+  const phone = document.getElementById('dealBuyerManualPhone').value.trim();
+  if(!name){ toast('enter a name'); return; }
+  editingDealBuyers.push({ id: uid(), buyerId:'', name, phone, stage:'interested' });
+  document.getElementById('dealBuyerManualName').value = '';
+  document.getElementById('dealBuyerManualPhone').value = '';
+  renderDealBuyersBoard();
+}
+const DEAL_BUYER_STAGES = [
+  { id:'interested', label:'Interested' },
+  { id:'negotiating', label:'Negotiating' },
+  { id:'closed', label:'Closed' }
+];
+function renderDealBuyersBoard(){
+  const board = document.getElementById('dealBuyersBoard');
+  if(!board) return;
+  board.innerHTML = DEAL_BUYER_STAGES.map(stage=>{
+    const items = editingDealBuyers.filter(b=>(b.stage||'interested')===stage.id);
+    return `
+      <div class="lead-col stage-${stage.id}" style="width:200px;">
+        <div class="lead-col-head"><div class="title">${esc(stage.label)}</div><div class="count">${items.length}</div></div>
+        <div class="lead-col-body" data-stage="${stage.id}" ondragover="onDealBuyerDragOver(event)" ondragleave="onDealBuyerDragLeave(event)" ondrop="onDealBuyerDrop(event,'${stage.id}')">
+          ${items.map(b=>`
+            <div class="lead-card" draggable="true" ondragstart="onDealBuyerDragStart(event,'${b.id}')" ondragend="onDealBuyerDragEnd(event)">
+              <div class="lc-name">${esc(b.name)}</div>
+              <div class="lc-sub">${esc(b.phone||'')}</div>
+              <button class="btn ghost sm" style="margin-top:6px;" onclick="editingDealBuyers=editingDealBuyers.filter(x=>x.id!=='${b.id}'); renderDealBuyersBoard();">remove</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+let dragDealBuyerId = null;
+function onDealBuyerDragStart(ev,id){ dragDealBuyerId=id; ev.target.classList.add('dragging'); }
+function onDealBuyerDragEnd(ev){ ev.target.classList.remove('dragging'); }
+function onDealBuyerDragOver(ev){ ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+function onDealBuyerDragLeave(ev){ ev.currentTarget.classList.remove('drag-over'); }
+function onDealBuyerDrop(ev, stageId){
+  ev.preventDefault(); ev.currentTarget.classList.remove('drag-over');
+  const id = dragDealBuyerId; dragDealBuyerId=null;
+  const b = editingDealBuyers.find(x=>x.id===id);
+  if(!b) return;
+  b.stage = stageId;
+  renderDealBuyersBoard();
+}
+
+function renderCityResults(){
+  const q = (document.getElementById('citySearch')?.value || '').toLowerCase().trim();
+  const container = document.getElementById('cityResults');
+  if(!container) return;
+
+  const matchedBuyers = store.buyers.filter(b=>{
+    const c = (b.city||'').toLowerCase();
+    const s = (b.state||'').toLowerCase();
+    const full = (c + ', ' + s);
+    return q === '' || c.includes(q) || s.includes(q) || full.includes(q);
+  });
+
+  const matchedCitiesFromList = US_CITIES.filter(item => q === '' || item.toLowerCase().includes(q));
+
+  let html = '';
+  if(q !== ''){
+    html += `<div style="padding:12px 16px; font-weight:600; color:var(--teal);">suggested cities matching "${esc(q)}":</div>`;
+    html += `<div style="padding:0 16px 12px; display:flex; flex-wrap:wrap; gap:6px;">`;
+    matchedCitiesFromList.slice(0, 15).forEach(cityStr => {
+      html += `<span class="chip" style="cursor:pointer;" onclick="document.getElementById('citySearch').value='${cityStr}'; renderCityResults();">${esc(cityStr)}</span>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div style="border-top:1px solid var(--line); padding-top:12px;">`;
+  if(!matchedBuyers.length){
+    html += `<div class="empty">no buyers found matching this city or state search</div>`;
+  } else {
+    html += matchedBuyers.map(b=>`
+      <div class="buyer-row">
+        <div style="flex:1;">
+          <div class="buyer-name">${esc(b.name)}</div>
+          <div class="buyer-sub">${esc(b.city)}, ${esc(b.state)} — phone: ${esc(b.phone||'none')}</div>
+        </div>
+        <button class="btn ghost sm" onclick="openBuyerModal('${b.id}')">view</button>
+      </div>
+    `).join('');
+  }
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.textContent = theme==='dark' ? '☀️ light mode' : '🌙 dark mode';
+}
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+}
+applyTheme(localStorage.getItem('theme') || 'light');
+
+const GEMINI_TOOLS = [{
+  functionDeclarations: [
+    {
+      name: "add_buyer",
+      description: "Add a new buyer to the CRM",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          name: { type: "STRING" },
+          phone: { type: "STRING" },
+          address: { type: "STRING" },
+          city: { type: "STRING" },
+          state: { type: "STRING" },
+          status: { type: "STRING", enum: ["hot", "warm", "cold"] },
+          rating: { type: "NUMBER", description: "1 to 10" },
+          notes: { type: "STRING" },
+          isLead: { type: "BOOLEAN", description: "whether to also add this buyer to the leads board, defaults to true" },
+          leadStage: { type: "STRING", enum: ["new", "voicemail", "not_interested", "follow_up"] }
+        },
+        required: ["name"]
+      }
+    },
+    {
+      name: "update_buyer",
+      description: "Update fields on an existing buyer, identified by id",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          id: { type: "STRING" },
+          name: { type: "STRING" },
+          phone: { type: "STRING" },
+          address: { type: "STRING" },
+          city: { type: "STRING" },
+          state: { type: "STRING" },
+          status: { type: "STRING", enum: ["hot", "warm", "cold"] },
+          rating: { type: "NUMBER" },
+          notes: { type: "STRING" },
+          isLead: { type: "BOOLEAN" },
+          leadStage: { type: "STRING", enum: ["new", "voicemail", "not_interested", "follow_up"] },
+          leadNote: { type: "STRING" }
+        },
+        required: ["id"]
+      }
+    },
+    {
+      name: "delete_buyer",
+      description: "Delete a buyer by id",
+      parameters: { type: "OBJECT", properties: { id: { type: "STRING" } }, required: ["id"] }
+    },
+    {
+      name: "add_task",
+      description: "Add a new task/reminder, optionally linked to a buyer id",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING" },
+          dueDate: { type: "STRING", description: "YYYY-MM-DD, defaults to today" },
+          dueTime: { type: "STRING", description: "HH:MM 24h, optional" },
+          buyerId: { type: "STRING" },
+          notes: { type: "STRING" }
+        },
+        required: ["title"]
+      }
+    },
+    {
+      name: "toggle_task_done",
+      description: "Toggle a task's done status by id",
+      parameters: { type: "OBJECT", properties: { id: { type: "STRING" } }, required: ["id"] }
+    },
+    {
+      name: "delete_task",
+      description: "Delete a task by id",
+      parameters: { type: "OBJECT", properties: { id: { type: "STRING" } }, required: ["id"] }
+    }
+  ]
+}];
+
+async function callGeminiFunction(name, args){
+  args = args || {};
+  try{
+    if(name === 'add_buyer'){
+      const id = uid();
+      const buyer = {
+        name: args.name || 'unnamed',
+        phone: args.phone || '',
+        address: args.address || '',
+        city: args.city || '',
+        state: (args.state||'').toUpperCase(),
+        status: args.status || 'warm',
+        rating: args.rating || 7,
+        sawShowing: false,
+        madeOffer: false,
+        isLead: args.isLead !== false,
+        leadStage: args.leadStage || 'new',
+        leadNote: '',
+        favs: [],
+        notes: args.notes || '',
+        offers: [],
+        updatedAt: new Date().toISOString()
+      };
+      store.buyers.push({ id, ...buyer });
+      if(window.db && window.FirestoreModules){
+        const { doc, setDoc } = window.FirestoreModules;
+        await setDoc(doc(window.db, 'buyers', id), buyer);
+      }
+      renderDashboard(); renderBuyers(); renderLeadsBoard(); populateCityDatalist(); renderCityResults();
+      return { success:true, id, message:`added buyer ${buyer.name}` };
+    }
+    if(name === 'update_buyer'){
+      const b = store.buyers.find(x=>x.id===args.id);
+      if(!b) return { success:false, error:'buyer not found' };
+      ['name','status','rating','notes','phone','city','state','address','isLead','leadStage','leadNote'].forEach(k=>{
+        if(args[k]!==undefined) b[k]=args[k];
+      });
+      b.updatedAt = new Date().toISOString();
+      if(window.db && window.FirestoreModules){
+        const { doc, setDoc } = window.FirestoreModules;
+        const { id, ...rest } = b;
+        await setDoc(doc(window.db, 'buyers', id), rest, { merge:true });
+      }
+      renderDashboard(); renderBuyers(); renderLeadsBoard(); populateCityDatalist(); renderCityResults();
+      return { success:true, message:`updated buyer ${b.name}` };
+    }
+    if(name === 'delete_buyer'){
+      const b = store.buyers.find(x=>x.id===args.id);
+      if(!b) return { success:false, error:'buyer not found' };
+      store.buyers = store.buyers.filter(x=>x.id!==args.id);
+      if(window.db && window.FirestoreModules){
+        const { doc, deleteDoc } = window.FirestoreModules;
+        await deleteDoc(doc(window.db, 'buyers', args.id));
+      }
+      renderDashboard(); renderBuyers(); renderLeadsBoard(); populateCityDatalist(); renderCityResults();
+      return { success:true, message:`deleted buyer ${b.name}` };
+    }
+    if(name === 'add_task'){
+      const id = uid();
+      const task = {
+        title: args.title,
+        dueDate: args.dueDate || todayStr(),
+        dueTime: args.dueTime || '',
+        buyerId: args.buyerId || '',
+        notes: args.notes || '',
+        done:false,
+        updatedAt: new Date().toISOString()
+      };
+      store.tasks.push({ id, ...task });
+      if(window.db && window.FirestoreModules){
+        const { doc, setDoc } = window.FirestoreModules;
+        await setDoc(doc(window.db, 'tasks', id), task);
+      }
+      renderDashboard(); renderTasks();
+      return { success:true, id, message:`added task ${task.title}` };
+    }
+    if(name === 'toggle_task_done'){
+      const t = store.tasks.find(x=>x.id===args.id);
+      if(!t) return { success:false, error:'task not found' };
+      t.done = !t.done;
+      if(window.db && window.FirestoreModules){
+        const { doc, setDoc } = window.FirestoreModules;
+        await setDoc(doc(window.db, 'tasks', t.id), t, { merge:true });
+      }
+      renderDashboard(); renderTasks();
+      return { success:true, message:`task ${t.title} now ${t.done?'done':'not done'}` };
+    }
+    if(name === 'delete_task'){
+      const t = store.tasks.find(x=>x.id===args.id);
+      if(!t) return { success:false, error:'task not found' };
+      store.tasks = store.tasks.filter(x=>x.id!==args.id);
+      if(window.db && window.FirestoreModules){
+        const { doc, deleteDoc } = window.FirestoreModules;
+        await deleteDoc(doc(window.db, 'tasks', args.id));
+      }
+      renderDashboard(); renderTasks();
+      return { success:true, message:`deleted task ${t.title}` };
+    }
+    return { success:false, error:'unknown function '+name };
+  } catch(e){
+    return { success:false, error:String(e) };
+  }
+}
+
+// ---------- task notifications ----------
+function getNotifiedSet(){
+  try{ return new Set(JSON.parse(localStorage.getItem('notifiedTaskIds')||'[]')); }
+  catch(e){ return new Set(); }
+}
+function saveNotifiedSet(set){
+  localStorage.setItem('notifiedTaskIds', JSON.stringify(Array.from(set)));
+}
+function checkDueTasks(){
+  if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const now = new Date();
+  const notified = getNotifiedSet();
+  let changed = false;
+  store.tasks.forEach(t=>{
+    if(t.done || !t.dueDate) return;
+    if(notified.has(t.id)) return;
+    const timePart = t.dueTime || '09:00';
+    const due = new Date(t.dueDate + 'T' + timePart + ':00');
+    if(!isNaN(due.getTime()) && due <= now){
+      try{
+        const n = new Notification('dealbook — task due', {
+          body: t.title + (t.notes ? ' — ' + t.notes : ''),
+          tag: 'task-' + t.id
+        });
+        n.onclick = ()=>{ window.focus(); };
+      }catch(e){ console.error('notification error', e); }
+      notified.add(t.id);
+      changed = true;
+    }
+  });
+  if(changed) saveNotifiedSet(notified);
+}
+let taskNotifInterval = null;
+function startTaskNotificationChecks(){
+  if(taskNotifInterval) return;
+  checkDueTasks();
+  taskNotifInterval = setInterval(checkDueTasks, 30000);
+}
+function enableTaskNotifications(){
+  if(typeof Notification === 'undefined'){
+    document.getElementById('notifStatusNote').textContent = 'this browser does not support notifications';
+    return;
+  }
+  Notification.requestPermission().then(perm=>{
+    const note = document.getElementById('notifStatusNote');
+    if(perm === 'granted'){
+      note.textContent = 'notifications enabled ✓';
+      startTaskNotificationChecks();
+    } else {
+      note.textContent = 'notification permission denied';
+    }
+  });
+}
+if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+  startTaskNotificationChecks();
+}
+
+// ---------- voice chat (speech-to-text + text-to-speech), same tool access as text chat ----------
+let recognition = null;
+let voiceModeOn = false;
+let isSpeaking = false;
+
+function setupRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = 'en-US';
+  r.continuous = false;
+  r.interimResults = false;
+  r.onresult = (e)=>{
+    const transcript = e.results[0][0].transcript;
+    document.getElementById('aiInput').value = transcript;
+    askGemini(transcript);
+  };
+  r.onerror = (e)=>{
+    console.error('speech recognition error', e.error);
+    if(voiceModeOn && e.error !== 'not-allowed'){
+      setTimeout(()=>{ if(voiceModeOn) startListening(); }, 800);
+    } else if(e.error === 'not-allowed'){
+      toast('microphone permission is needed for voice mode');
+      voiceModeOn = false;
+      updateVoiceUI();
+    }
+  };
+  r.onend = ()=>{
+    if(voiceModeOn && !isSpeaking){
+      setTimeout(()=>{ if(voiceModeOn) startListening(); }, 250);
+    }
+  };
+  return r;
+}
+function startListening(){
+  if(!recognition) recognition = setupRecognition();
+  if(!recognition){ toast('this browser does not support speech recognition'); voiceModeOn = false; updateVoiceUI(); return; }
+  try{ recognition.start(); }catch(e){}
+}
+function stopListening(){
+  if(recognition){ try{ recognition.stop(); }catch(e){} }
+}
+function updateVoiceUI(){
+  const bubble = document.getElementById('voiceBubble');
+  if(voiceModeOn) bubble.classList.add('on'); else bubble.classList.remove('on');
+}
+function toggleVoiceMode(){
+  voiceModeOn = !voiceModeOn;
+  updateVoiceUI();
+  if(voiceModeOn){
+    document.getElementById('geminiPanel').classList.add('show');
+    checkAiKey();
+    startListening();
+  } else {
+    stopListening();
+    if('speechSynthesis' in window) speechSynthesis.cancel();
+    isSpeaking = false;
+  }
+}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  isSpeaking = true;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 1.05;
+  u.onend = ()=>{
+    isSpeaking = false;
+    if(voiceModeOn) startListening();
+  };
+  u.onerror = ()=>{
+    isSpeaking = false;
+    if(voiceModeOn) startListening();
+  };
+  speechSynthesis.speak(u);
+}
+
+function toggleGeminiPanel(){
+  const p = document.getElementById('geminiPanel');
+  p.classList.toggle('show');
+  checkAiKey();
+}
+function checkAiKey(){
+  const key = localStorage.getItem('geminiKey');
+  const warn = document.getElementById('aiKeyWarning');
+  if(!key){
+    warn.innerHTML = '<div class="gp-keywarning">please enter your gemini api key in settings first</div>';
+  } else {
+    warn.innerHTML = '';
+  }
+}
+
+// fast, non-thinking model call: thinkingBudget 0 skips gemini's internal reasoning pass
+// so replies come back as quickly as possible for both text and voice chat.
+const GEMINI_MODEL = 'gemini-3.6-flash';
+const GEMINI_GENERATION_CONFIG = {
+  thinkingConfig: { thinkingBudget: 0 },
+  temperature: 0.3,
+  maxOutputTokens: 512
+};
+
+async function askGemini(voiceText){
+  let key = localStorage.getItem('geminiKey') || document.getElementById('geminiKeyInput')?.value?.trim();
+  const input = document.getElementById('aiInput');
+  const log = document.getElementById('aiLog');
+  const q = (typeof voiceText === 'string' ? voiceText : input.value).trim();
+  if(!q) return;
+  if(!key){
+    log.innerHTML += '<div class="ai-msg err">please set your gemini api key in settings</div>';
+    if(voiceModeOn) speak('please set your gemini api key in settings first');
+    return;
+  }
+  log.innerHTML += '<div class="ai-msg user">'+esc(q)+'</div>';
+  input.value = '';
+  log.scrollTop = log.scrollHeight;
+  const pendingEl = document.createElement('div');
+  pendingEl.className = 'ai-msg pending';
+  pendingEl.textContent = '...';
+  log.appendChild(pendingEl);
+  log.scrollTop = log.scrollHeight;
+
+  const systemText = "You are a fast assistant for a real estate wholesaling CRM called dealbook. " +
+    "Keep replies brief and to the point, plain text, no markdown. " +
+    "You have full access to read AND modify the data through the tools provided (add/update/delete buyers and tasks) — always call the right tool to actually make a change the user asks for, don't just describe it, then confirm briefly in plain text what you did. " +
+    "When adding a buyer, they are added to the leads board by default (isLead true, leadStage 'new') unless told otherwise. " +
+    "Current buyers (with their ids): " + JSON.stringify(store.buyers) + ". Current tasks (with their ids): " + JSON.stringify(store.tasks) + ". " +
+    "Today's date is " + todayStr() + ". User message: " + q;
+
+  let contents = [{ role: 'user', parts: [{ text: systemText }] }];
+
+  try {
+    for(let turn=0; turn<6; turn++){
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ contents, tools: GEMINI_TOOLS, generationConfig: GEMINI_GENERATION_CONFIG })
+      });
+      const data = await res.json();
+      if(data.error){
+        pendingEl.remove();
+        log.innerHTML += '<div class="ai-msg err">api error: '+esc(data.error.message)+'</div>';
+        if(voiceModeOn) speak('there was an error from gemini, check your key');
+        break;
+      }
+      const parts = data.candidates?.[0]?.content?.parts || [];
+      const functionCalls = parts.filter(p=>p.functionCall);
+      if(functionCalls.length){
+        contents.push({ role:'model', parts });
+        const responseParts = [];
+        for(const fc of functionCalls){
+          const result = await callGeminiFunction(fc.functionCall.name, fc.functionCall.args);
+          responseParts.push({ functionResponse: { name: fc.functionCall.name, response: result } });
+        }
+        contents.push({ role:'user', parts: responseParts });
+        continue;
+      }
+      const text = parts.map(p=>p.text).filter(Boolean).join('\n') || 'no response';
+      pendingEl.remove();
+      log.innerHTML += '<div class="ai-msg ai">'+esc(text)+'</div>';
+      if(voiceModeOn) speak(text);
+      break;
+    }
+  } catch(e) {
+    pendingEl.remove();
+    log.innerHTML += '<div class="ai-msg err">network error calling gemini api</div>';
+    if(voiceModeOn) speak('there was a network error connecting to gemini');
+  }
+  log.scrollTop = log.scrollHeight;
+}
+function saveGeminiKey(){
+  const k = document.getElementById('geminiKeyInput').value.trim();
+  if(k){
+    localStorage.setItem('geminiKey', k);
+    document.getElementById('keySavedNote').textContent = 'saved';
+    setTimeout(()=>document.getElementById('keySavedNote').textContent='', 2000);
+    checkAiKey();
+  }
+}
+async function testGeminiKey(){
+  const k = document.getElementById('geminiKeyInput').value.trim() || localStorage.getItem('geminiKey');
+  if(!k){ alert('enter a key first'); return; }
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${k}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ contents: [{ parts: [{ text: 'hello' }] }], generationConfig: GEMINI_GENERATION_CONFIG })
+    });
+    const data = await res.json();
+    if(res.ok && !data.error) alert('connection successful');
+    else alert('connection failed: ' + (data.error?.message || 'check your key'));
+  } catch(e) { alert('error testing key'); }
+}
+function loadSettingsUI(){
+  const keyVal = localStorage.getItem('geminiKey');
+  if(keyVal) {
+    document.getElementById('geminiKeyInput').value = keyVal;
+  }
+  checkAiKey();
+}
+loadSettingsUI();
+renderLeadsBoard();
+</script>
+</body>
+</html>

@@ -181,7 +181,7 @@
   .lead-col-head .count{background:var(--teal-soft); color:var(--teal); font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:20px;}
   .lead-col-body{flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:9px; min-height:60px; transition:background .15s;}
   .lead-col-body.drag-over{background:var(--teal-soft);}
-  .lead-col.stage-new .lead-col-head{background:#f7edc4; border-bottom-color:#e2cf87;}
+  .lead-col.stage-new .lead-col-head, .lead-col.stage-new_buyer .lead-col-head{background:#f7edc4; border-bottom-color:#e2cf87;}
   .lead-col.stage-voicemail .lead-col-head{background:#d9e6f2; border-bottom-color:#a9c6e0;}
   .lead-col.stage-not_interested .lead-col-head{background:#f4dcd6; border-bottom-color:#e3b3a7;}
   .lead-col.stage-follow_up .lead-col-head{background:#dcefdc; border-bottom-color:#a9d6ab;}
@@ -189,7 +189,7 @@
   .lead-col.stage-interested .lead-col-head{background:#dcefdc; border-bottom-color:#a9d6ab;}
   .lead-col.stage-negotiating .lead-col-head{background:#d9e6f2; border-bottom-color:#a9c6e0;}
   .lead-col.stage-closed .lead-col-head{background:#dcefdc; border-bottom-color:#a9d6ab;}
-  :root[data-theme="dark"] .lead-col.stage-new .lead-col-head{background:#3a3320; border-bottom-color:#5a4d28;}
+  :root[data-theme="dark"] .lead-col.stage-new .lead-col-head, :root[data-theme="dark"] .lead-col.stage-new_buyer .lead-col-head{background:#3a3320; border-bottom-color:#5a4d28;}
   :root[data-theme="dark"] .lead-col.stage-voicemail .lead-col-head{background:#1f2c38; border-bottom-color:#2c4258;}
   :root[data-theme="dark"] .lead-col.stage-not_interested .lead-col-head{background:#3a241d; border-bottom-color:#5a3226;}
   :root[data-theme="dark"] .lead-col.stage-follow_up .lead-col-head,
@@ -215,6 +215,11 @@
   .lead-card textarea.lc-note{
     margin-top:8px; font-size:12.5px; padding:6px 8px; border-radius:4px; resize:vertical; min-height:34px;
   }
+  .lead-card textarea.lc-note.deal-note{
+    min-height:64px; font-size:13px; padding:8px 10px; line-height:1.4; background:#fffdf8;
+  }
+  :root[data-theme="dark"] .lead-card textarea.lc-note.deal-note{background:#242017;}
+  .lead-card textarea.lc-note.deal-note:focus{min-height:110px;}
   :root[data-theme="dark"] .lead-col-body.drag-over{background:#243128;}
 
   :root[data-theme="dark"]{
@@ -250,13 +255,7 @@
 </style>
 </head>
 <body>
-<div id="authGate" style="position:fixed; inset:0; background:var(--paper); z-index:200; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:16px;">
-  <div style="font-family:'zilla slab',serif; font-size:28px; font-weight:600;">deal<span style="color:var(--gold);">book</span></div>
-  <p style="color:var(--ink-soft); font-size:14px;">sign in to access your team's crm</p>
-  <button class="btn brick" id="googleSignInBtn" onclick="doGoogleSignIn()">sign in with google</button>
-  <p id="authGateNote" style="color:var(--ink-soft); font-size:12.5px; max-width:340px; text-align:center;"></p>
-</div>
-<div class="app" id="appRoot" style="display:none;">
+<div class="app" id="appRoot">
   <div class="sidebar">
     <div class="brand">deal<span>book</span></div>
     <div class="nav-item active" data-page="dashboard">dashboard</div>
@@ -381,35 +380,8 @@
           enable browser notifications so dealbook alerts you when a task's due time arrives. the tab needs to stay open for this to work — browsers don't allow background notifications for a plain website.
         </p>
         <button class="btn brick sm" onclick="enableTaskNotifications()">enable notifications</button>
+        <button class="btn ghost sm" onclick="testTaskNotification()">test notification + sound</button>
         <span id="notifStatusNote" style="font-size:13px; color:var(--teal); margin-left:10px;"></span>
-      </div>
-      <div class="card" id="teamAccessCard" style="padding:20px 22px; max-width:560px; margin-top:16px; display:none;">
-        <div class="section-title">team access</div>
-        <p style="font-size:13.5px; color:var(--ink-soft); margin-top:0;">
-          invite teammates by email and choose exactly which sections they can see. only visible to you as the admin.
-          real enforcement also needs a matching Firestore security rule — see the note at the bottom.
-        </p>
-        <div class="field-row">
-          <div class="field"><label>teammate email</label><input id="teamEmailInput" placeholder="name@example.com"></div>
-        </div>
-        <div class="field">
-          <label>access</label>
-          <div class="flag-row" style="flex-wrap:wrap;">
-            <label class="flag-check"><input type="checkbox" id="teamFull" onchange="document.getElementById('teamModuleRow').style.display=this.checked?'none':'flex';"> full access (everything)</label>
-          </div>
-          <div class="flag-row" id="teamModuleRow" style="flex-wrap:wrap; margin-top:6px;">
-            <label class="flag-check"><input type="checkbox" class="team-mod" value="buyers"> buyers</label>
-            <label class="flag-check"><input type="checkbox" class="team-mod" value="leads"> leads</label>
-            <label class="flag-check"><input type="checkbox" class="team-mod" value="wholesalers"> wholesaler list</label>
-            <label class="flag-check"><input type="checkbox" class="team-mod" value="acquisition"> acquisition</label>
-            <label class="flag-check"><input type="checkbox" class="team-mod" value="deals"> dispo deals</label>
-            <label class="flag-check"><input type="checkbox" class="team-mod" value="offers"> offers</label>
-            <label class="flag-check"><input type="checkbox" class="team-mod" value="tasks"> tasks</label>
-            <label class="flag-check"><input type="checkbox" class="team-mod" value="city"> by city</label>
-          </div>
-        </div>
-        <button class="btn brick sm" onclick="addTeamAccess()">give access</button>
-        <div id="teamAccessList" style="margin-top:14px;"></div>
       </div>
       <div class="card" style="padding:20px 22px; max-width:520px; margin-top:16px;">
         <div class="section-title">data</div>
@@ -647,24 +619,18 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getFirestore, collection, getDocs, setDoc, getDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-const firebaseConfig = {
-    apiKey: "AIzaSyCLV2_E06813b3BG4FNqWmY0O6PEwXlpXQ",
+  const firebaseConfig = {
+    apiKey: "AIzaSy...",
     authDomain: "hafez-3c500.firebaseapp.com",
     projectId: "hafez-3c500",
     storageBucket: "hafez-3c500.firebasestorage.app",
-    messagingSenderId: "375224887521",
-    appId: "1:375224887521:web:b6fa2c6a70b6dd2fdc2fa0",
-    measurementId: "G-NB6CS7YLRQ"
-};
+    messagingSenderId: "123456789",
+    appId: "1:1234..."
+  };
   const app = initializeApp(firebaseConfig);
   window.db = getFirestore(app);
   window.FirestoreModules = { collection, getDocs, setDoc, getDoc, doc, deleteDoc };
-  window.auth = getAuth(app);
-  window.AuthModules = { GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut };
-  onAuthStateChanged(window.auth, (user)=>{
-    if (typeof handleAuthState === 'function') handleAuthState(user);
-  });
+  if (typeof loadDataFromFirebase === 'function') loadDataFromFirebase();
 </script>
 <script>
 const US_CITIES = [
@@ -716,112 +682,6 @@ async function loadDataFromFirebase() {
 }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-/* ---------- auth + team access ---------- */
-let currentUser = null;
-let myPermissions = { full:false, modules:{} };
-const ALL_MODULES = ['buyers','leads','wholesalers','acquisition','deals','offers','tasks','city'];
-function sanitizeEmailKey(email){ return String(email||'').toLowerCase().replace(/[^a-z0-9]/g,'_'); }
-
-function doGoogleSignIn(){
-  if(!window.auth || !window.AuthModules){ document.getElementById('authGateNote').textContent = 'firebase is still loading, try again in a second'; return; }
-  const { GoogleAuthProvider, signInWithPopup } = window.AuthModules;
-  signInWithPopup(window.auth, new GoogleAuthProvider()).catch(e=>{
-    document.getElementById('authGateNote').textContent = 'sign-in failed: ' + (e.message||e);
-  });
-}
-async function handleAuthState(user){
-  currentUser = user;
-  if(!user){
-    document.getElementById('authGate').style.display = 'flex';
-    document.getElementById('appRoot').style.display = 'none';
-    return;
-  }
-  document.getElementById('authGate').style.display = 'none';
-  document.getElementById('appRoot').style.display = 'flex';
-  await loadPermissions();
-  applyPermissionsToUI();
-  loadDataFromFirebase();
-}
-async function loadPermissions(){
-  try{
-    if(!window.db || !window.FirestoreModules){ myPermissions = { full:true, modules:{} }; return; }
-    const { doc, getDoc, setDoc } = window.FirestoreModules;
-    const adminSnap = await getDoc(doc(window.db, 'settings', 'adminEmails'));
-    let admins = adminSnap.exists() ? (adminSnap.data().emails||[]) : [];
-    if(admins.length===0){
-      // first person ever to sign in becomes the admin automatically
-      admins = [currentUser.email];
-      await setDoc(doc(window.db, 'settings', 'adminEmails'), { emails: admins });
-    }
-    const isAdmin = admins.map(e=>e.toLowerCase()).includes((currentUser.email||'').toLowerCase());
-    if(isAdmin){
-      myPermissions = { full:true, modules:{}, isAdmin:true };
-      return;
-    }
-    const accessSnap = await getDoc(doc(window.db, 'teamAccess', sanitizeEmailKey(currentUser.email)));
-    if(accessSnap.exists()){
-      const d = accessSnap.data();
-      myPermissions = { full: !!d.full, modules: d.modules||{}, isAdmin:false };
-    } else {
-      myPermissions = { full:false, modules:{}, isAdmin:false, noAccess:true };
-    }
-  } catch(e){
-    console.error('permission load error', e);
-    myPermissions = { full:true, modules:{} };
-  }
-}
-function canSee(moduleKey){
-  if(myPermissions.full) return true;
-  return !!myPermissions.modules[moduleKey];
-}
-function applyPermissionsToUI(){
-  document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
-    const page = item.dataset.page;
-    if(page==='dashboard' || page==='settings'){ item.style.display=''; return; }
-    item.style.display = canSee(page) ? '' : 'none';
-  });
-  document.getElementById('teamAccessCard').style.display = myPermissions.isAdmin ? 'block' : 'none';
-  if(myPermissions.noAccess && !myPermissions.isAdmin){
-    toast('your account has no access yet — ask your admin to add you in settings');
-  }
-  if(myPermissions.isAdmin) renderTeamAccessList();
-}
-async function addTeamAccess(){
-  const email = document.getElementById('teamEmailInput').value.trim().toLowerCase();
-  if(!email){ toast('enter an email'); return; }
-  const full = document.getElementById('teamFull').checked;
-  const modules = {};
-  document.querySelectorAll('.team-mod').forEach(cb=>{ modules[cb.value] = cb.checked; });
-  try{
-    const { doc, setDoc } = window.FirestoreModules;
-    await setDoc(doc(window.db, 'teamAccess', sanitizeEmailKey(email)), { email, full, modules, updatedAt: new Date().toISOString() });
-    toast('access saved for ' + email);
-    document.getElementById('teamEmailInput').value = '';
-    document.getElementById('teamFull').checked = false;
-    document.querySelectorAll('.team-mod').forEach(cb=>cb.checked=false);
-    document.getElementById('teamModuleRow').style.display = 'flex';
-    renderTeamAccessList();
-  } catch(e){ toast('could not save access: ' + e.message); }
-}
-async function renderTeamAccessList(){
-  const box = document.getElementById('teamAccessList');
-  if(!box) return;
-  try{
-    const { collection, getDocs } = window.FirestoreModules;
-    const snap = await getDocs(collection(window.db, 'teamAccess'));
-    const rows = snap.docs.map(d=>d.data());
-    if(!rows.length){ box.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">no teammates added yet</div>'; return; }
-    box.innerHTML = rows.map(r=>`
-      <div class="offer-item">
-        <div>
-          <div class="oline1">${esc(r.email)}</div>
-          <div class="onotes">${r.full ? 'full access' : 'access: ' + (Object.keys(r.modules||{}).filter(k=>r.modules[k]).join(', ') || 'none yet')}</div>
-        </div>
-      </div>
-    `).join('');
-  } catch(e){ box.innerHTML = '<div style="font-size:12.5px;color:var(--ink-soft);">could not load team list</div>'; }
-}
 
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
@@ -1687,7 +1547,7 @@ function addExistingBuyerToDeal(){
   if(!id) return;
   const b = store.buyers.find(x=>x.id===id);
   if(!b) return;
-  editingDealBuyers.push({ id: uid(), buyerId: b.id, name: b.name, phone: b.phone||'', stage:'interested' });
+  editingDealBuyers.push({ id: uid(), buyerId: b.id, name: b.name, phone: b.phone||'', stage:'new_buyer', note:'' });
   sel.value = '';
   renderDealBuyersBoard();
 }
@@ -1695,29 +1555,31 @@ function addManualBuyerToDeal(){
   const name = document.getElementById('dealBuyerManualName').value.trim();
   const phone = document.getElementById('dealBuyerManualPhone').value.trim();
   if(!name){ toast('enter a name'); return; }
-  editingDealBuyers.push({ id: uid(), buyerId:'', name, phone, stage:'interested' });
+  editingDealBuyers.push({ id: uid(), buyerId:'', name, phone, stage:'new_buyer', note:'' });
   document.getElementById('dealBuyerManualName').value = '';
   document.getElementById('dealBuyerManualPhone').value = '';
   renderDealBuyersBoard();
 }
 const DEAL_BUYER_STAGES = [
-  { id:'interested', label:'Interested' },
-  { id:'negotiating', label:'Negotiating' },
-  { id:'closed', label:'Closed' }
+  { id:'new_buyer', label:'New Buyer' },
+  { id:'interested', label:'Interested Buyer' },
+  { id:'follow_up', label:'Follow Up' },
+  { id:'not_interested', label:'Not Interested' }
 ];
 function renderDealBuyersBoard(){
   const board = document.getElementById('dealBuyersBoard');
   if(!board) return;
   board.innerHTML = DEAL_BUYER_STAGES.map(stage=>{
-    const items = editingDealBuyers.filter(b=>(b.stage||'interested')===stage.id);
+    const items = editingDealBuyers.filter(b=>(b.stage||'new_buyer')===stage.id);
     return `
-      <div class="lead-col stage-${stage.id}" style="width:200px;">
+      <div class="lead-col stage-${stage.id}" style="width:230px;">
         <div class="lead-col-head"><div class="title">${esc(stage.label)}</div><div class="count">${items.length}</div></div>
         <div class="lead-col-body" data-stage="${stage.id}" ondragover="onDealBuyerDragOver(event)" ondragleave="onDealBuyerDragLeave(event)" ondrop="onDealBuyerDrop(event,'${stage.id}')">
           ${items.map(b=>`
             <div class="lead-card" draggable="true" ondragstart="onDealBuyerDragStart(event,'${b.id}')" ondragend="onDealBuyerDragEnd(event)">
               <div class="lc-name">${esc(b.name)}</div>
               <div class="lc-sub">${esc(b.phone||'')}</div>
+              <textarea class="lc-note deal-note" placeholder="add a note about this buyer..." onclick="event.stopPropagation()" onchange="updateDealBuyerNote('${b.id}', this.value)">${esc(b.note||'')}</textarea>
               <button class="btn ghost sm" style="margin-top:6px;" onclick="editingDealBuyers=editingDealBuyers.filter(x=>x.id!=='${b.id}'); renderDealBuyersBoard();">remove</button>
             </div>
           `).join('')}
@@ -1725,6 +1587,10 @@ function renderDealBuyersBoard(){
       </div>
     `;
   }).join('');
+}
+function updateDealBuyerNote(id, note){
+  const b = editingDealBuyers.find(x=>x.id===id);
+  if(b) b.note = note;
 }
 let dragDealBuyerId = null;
 function onDealBuyerDragStart(ev,id){ dragDealBuyerId=id; ev.target.classList.add('dragging'); }
@@ -1977,6 +1843,42 @@ async function callGeminiFunction(name, args){
 }
 
 // ---------- task notifications ----------
+function playNotificationSound(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!Ctx) return;
+    const ctx = new Ctx();
+    const notes = [880, 1108.73]; // two-tone chime
+    notes.forEach((freq, i)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i*0.16;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.35, start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start+0.35);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(start); osc.stop(start+0.4);
+    });
+    setTimeout(()=>{ try{ ctx.close(); }catch(e){} }, 900);
+  }catch(e){ console.error('sound error', e); }
+}
+function testTaskNotification(){
+  const note = document.getElementById('notifStatusNote');
+  playNotificationSound();
+  if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+    try{
+      const n = new Notification('dealbook — test notification', { body: 'this is what a due-task alert looks like, with sound.', tag:'test-notif' });
+      n.onclick = ()=>{ window.focus(); };
+      if(note) note.textContent = 'test sent ✓ (check for a system notification + sound)';
+    }catch(e){
+      if(note) note.textContent = 'sound played, but the notification itself failed: ' + e.message;
+    }
+  } else {
+    if(note) note.textContent = 'sound played — enable notifications above to also see a system popup';
+  }
+}
 function getNotifiedSet(){
   try{ return new Set(JSON.parse(localStorage.getItem('notifiedTaskIds')||'[]')); }
   catch(e){ return new Set(); }
@@ -2001,6 +1903,7 @@ function checkDueTasks(){
           tag: 'task-' + t.id
         });
         n.onclick = ()=>{ window.focus(); };
+        playNotificationSound();
       }catch(e){ console.error('notification error', e); }
       notified.add(t.id);
       changed = true;
@@ -2023,6 +1926,7 @@ function enableTaskNotifications(){
     const note = document.getElementById('notifStatusNote');
     if(perm === 'granted'){
       note.textContent = 'notifications enabled ✓';
+      playNotificationSound();
       startTaskNotificationChecks();
     } else {
       note.textContent = 'notification permission denied';

@@ -90,6 +90,30 @@
   .badge.hot{background:#f4e2dc; color:var(--brick-dark);}
   .badge.warm{background:#f2e6c9; color:#7a5a1c;}
   .badge.cold{background:var(--teal-soft); color:var(--teal);}
+  .badge.important{background:#f7e3b0; color:#7a5a12;}
+  .badge.urgent{background:#f4c9c0; color:#8a2c14;}
+  .filter-chip{
+    display:inline-flex; align-items:center; gap:5px; font-size:12.5px; font-weight:600; padding:6px 14px;
+    border-radius:20px; border:1px solid var(--line); background:var(--card); color:var(--ink-soft); cursor:pointer;
+    transition: all .15s ease; font-family:inherit;
+  }
+  .filter-chip:hover{border-color:var(--teal); color:var(--teal);}
+  .filter-chip.active{background:var(--teal); border-color:var(--teal); color:#fff;}
+  :root[data-theme="dark"] .filter-chip.active{color:#0d1512;}
+  .task-row.priority-urgent{border-left:3px solid #c23b1f; padding-left:13px;}
+  .task-row.priority-important{border-left:3px solid #caa23a; padding-left:13px;}
+  #ringBanner{
+    position:fixed; top:0; left:0; right:0; z-index:500; background:#c23b1f; color:#fff; padding:12px 20px;
+    display:none; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    box-shadow:0 4px 14px rgba(0,0,0,.25); font-family:'Inter', sans-serif;
+  }
+  #ringBanner.show{display:flex;}
+  #ringBanner .rb-left{display:flex; align-items:center; gap:10px;}
+  #ringBanner .rb-icon{font-size:20px; animation:ringShake 1s infinite;}
+  @keyframes ringShake{ 0%,100%{transform:rotate(0);} 20%{transform:rotate(-12deg);} 40%{transform:rotate(10deg);} 60%{transform:rotate(-8deg);} 80%{transform:rotate(6deg);} }
+  #ringBannerText{font-weight:700; font-size:14px;}
+  #ringBanner .btn{border-color:rgba(255,255,255,.6); color:#fff;}
+  #ringBanner .btn:hover{background:rgba(255,255,255,.15);}
   .empty{padding:26px 16px; text-align:center; color:var(--ink-soft); font-size:14px;}
   input, select, textarea{
     font-family:inherit; font-size:14px; padding:9px 11px; border:1px solid var(--line);
@@ -246,6 +270,8 @@
   :root[data-theme="dark"] .badge.hot{background:#3d241b; color:#f4b193;}
   :root[data-theme="dark"] .badge.warm{background:#372c17; color:#e7c78b;}
   :root[data-theme="dark"] .badge.cold{background:#1c2925; color:#8fc7ac;}
+  :root[data-theme="dark"] .badge.important{background:#372c17; color:#e7c78b;}
+  :root[data-theme="dark"] .badge.urgent{background:#3d241b; color:#f4a58a;}
   :root[data-theme="dark"] .lead-card, :root[data-theme="dark"] .board-card, :root[data-theme="dark"] .deal-card{background:#1c1a14; border-color:#332f22;}
   :root[data-theme="dark"] .lead-card:hover, :root[data-theme="dark"] .board-card:hover, :root[data-theme="dark"] .deal-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.45);}
   :root[data-theme="dark"] .toast{background:#2a271c; color:var(--ink);}
@@ -255,6 +281,10 @@
 </style>
 </head>
 <body>
+<div id="ringBanner">
+  <div class="rb-left"><span class="rb-icon">🔔</span><div id="ringBannerText"></div></div>
+  <button class="btn ghost sm" onclick="stopAllRinging()">stop ringing</button>
+</div>
 <div class="app" id="appRoot">
   <div class="sidebar">
     <div class="brand">deal<span>book</span></div>
@@ -266,6 +296,7 @@
     <div class="nav-item" data-page="acquisition">acquisition</div>
     <div class="nav-item" data-page="offers">offers</div>
     <div class="nav-item" data-page="tasks">tasks</div>
+    <div class="nav-item" data-page="search">search</div>
     <div class="nav-item" data-page="city">by city</div>
     <div class="nav-item" data-page="settings">settings</div>
     <div class="nav-item" id="themeToggle" onclick="toggleTheme()">🌙 dark mode</div>
@@ -274,22 +305,54 @@
   <div class="main">
     <div class="page active" id="page-dashboard">
       <div class="page-head">
-        <div><h1>dashboard</h1><p id="todayDate"></p></div>
+        <div><h1>dashboard</h1><p id="todayDate"></p><p id="egyptClock" style="font-size:12.5px; color:var(--ink-soft); margin-top:2px;"></p></div>
         <button class="btn brick" onclick="openTaskModal()">+ new task</button>
       </div>
-      <div class="grid cols-3" style="margin-bottom:22px;">
-        <div class="card stat"><div class="num" id="statBuyers">0</div><div class="label">buyers tracked</div></div>
-        <div class="card stat"><div class="num" id="statHot">0</div><div class="label">hot leads</div></div>
-        <div class="card stat"><div class="num" id="statTasksToday">0</div><div class="label">tasks due today</div></div>
+      <div class="chip-list" style="margin-bottom:16px;">
+        <button class="filter-chip active" data-dashview="overview" onclick="setDashboardView('overview')">overview (totals)</button>
+        <button class="filter-chip" data-dashview="day" onclick="setDashboardView('day')">day view</button>
       </div>
-      <div class="grid cols-2">
-        <div class="card" style="padding:18px 20px;">
-          <div class="section-title">today & overdue tasks</div>
-          <div id="dashTaskList"></div>
+      <div id="dashOverviewSection">
+        <div class="grid cols-3" style="margin-bottom:16px;">
+          <div class="card stat"><div class="num" id="statBuyers">0</div><div class="label">buyers tracked</div></div>
+          <div class="card stat"><div class="num" id="statHot">0</div><div class="label">hot leads</div></div>
+          <div class="card stat"><div class="num" id="statTasksToday">0</div><div class="label">tasks due today</div></div>
         </div>
-        <div class="card" style="padding:18px 20px;">
-          <div class="section-title">hot leads</div>
-          <div id="dashHotList"></div>
+        <div class="grid cols-3" style="margin-bottom:22px;">
+          <div class="card stat"><div class="num" id="statWholesalers">0</div><div class="label">wholesalers</div></div>
+          <div class="card stat"><div class="num" id="statAcquisitions">0</div><div class="label">acquisition leads</div></div>
+          <div class="card stat"><div class="num" id="statOffersTotal">0</div><div class="label">total offers made</div></div>
+        </div>
+        <div class="grid cols-2">
+          <div class="card" style="padding:18px 20px;">
+            <div class="section-title">today & overdue tasks</div>
+            <div id="dashTaskList"></div>
+          </div>
+          <div class="card" style="padding:18px 20px;">
+            <div class="section-title">hot leads</div>
+            <div id="dashHotList"></div>
+          </div>
+        </div>
+      </div>
+      <div id="dashDaySection" style="display:none;">
+        <div class="card" style="padding:16px 18px; margin-bottom:18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <label style="font-weight:600; font-size:13.5px;">viewing day:</label>
+          <input type="date" id="dashDayPicker" onchange="renderDashboardDay()">
+          <button class="btn ghost sm" onclick="document.getElementById('dashDayPicker').value=todayStr(); renderDashboardDay();">jump to today</button>
+        </div>
+        <div class="grid cols-2" style="margin-bottom:18px;">
+          <div class="card stat"><div class="num" id="statDayTasks">0</div><div class="label" id="statDayTasksLabel">tasks due</div></div>
+          <div class="card stat"><div class="num" id="statDayOffers">0</div><div class="label" id="statDayOffersLabel">offers made</div></div>
+        </div>
+        <div class="grid cols-2">
+          <div class="card" style="padding:18px 20px;">
+            <div class="section-title" id="dashDayTasksTitle">tasks</div>
+            <div id="dashDayTaskList"></div>
+          </div>
+          <div class="card" style="padding:18px 20px;">
+            <div class="section-title" id="dashDayOffersTitle">offers</div>
+            <div id="dashDayOfferList"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -348,6 +411,19 @@
       </div>
       <div class="card" id="taskList"></div>
     </div>
+    <div class="page" id="page-search">
+      <div class="page-head">
+        <div><h1>search</h1><p>search everything — buyers, leads, wholesalers, and acquisition — all in one place</p></div>
+      </div>
+      <div class="search-bar"><input id="globalSearchInput" placeholder="search by name, phone, city or address..." oninput="renderGlobalSearch()"></div>
+      <div class="chip-list" style="margin-bottom:16px;">
+        <button class="filter-chip active" data-gfilter="all" onclick="setGlobalSearchFilter('all')">all</button>
+        <button class="filter-chip" data-gfilter="buyers" onclick="setGlobalSearchFilter('buyers')">buyers only</button>
+        <button class="filter-chip" data-gfilter="wholesalers" onclick="setGlobalSearchFilter('wholesalers')">wholesalers only</button>
+        <button class="filter-chip" data-gfilter="acquisition" onclick="setGlobalSearchFilter('acquisition')">acquisition only</button>
+      </div>
+      <div class="card" id="globalSearchResults"></div>
+    </div>
     <div class="page" id="page-city">
       <div class="page-head">
         <div><h1>by city</h1><p>type any city in us or texas to filter instantly</p></div>
@@ -377,11 +453,21 @@
       <div class="card" style="padding:20px 22px; max-width:520px; margin-top:16px;">
         <div class="section-title">task notifications</div>
         <p style="font-size:13.5px; color:var(--ink-soft); margin-top:0;">
-          enable browser notifications so dealbook alerts you when a task's due time arrives. the tab needs to stay open for this to work — browsers don't allow background notifications for a plain website.
+          enable browser notifications so dealbook alerts you when a task's due time arrives (times are based on Cairo time). when a task is due, a red banner rings at the top of the screen and keeps playing sound every few seconds until you press "stop ringing" — the tab needs to stay open for this to work.
         </p>
         <button class="btn brick sm" onclick="enableTaskNotifications()">enable notifications</button>
         <button class="btn ghost sm" onclick="testTaskNotification()">test notification + sound</button>
         <span id="notifStatusNote" style="font-size:13px; color:var(--teal); margin-left:10px;"></span>
+        <div class="field" style="margin-top:14px; max-width:280px;">
+          <label>notification sound</label>
+          <select id="notifSoundSelect" onchange="localStorage.setItem('notifSoundChoice', this.value); playNotificationSound(this.value);">
+            <option value="chime">chime (two-tone)</option>
+            <option value="beep">beep (classic)</option>
+            <option value="alert">alert (triple beep)</option>
+            <option value="bell">bell (soft)</option>
+          </select>
+        </div>
+        <button class="btn ghost sm" onclick="playNotificationSound(document.getElementById('notifSoundSelect').value)">preview sound</button>
       </div>
       <div class="card" style="padding:20px 22px; max-width:520px; margin-top:16px;">
         <div class="section-title">data</div>
@@ -486,6 +572,14 @@
     <div class="field">
       <label>related buyer</label>
       <select id="taskBuyer"><option value="">none</option></select>
+    </div>
+    <div class="field">
+      <label>importance</label>
+      <select id="taskPriority">
+        <option value="normal">normal</option>
+        <option value="important">⭐ important</option>
+        <option value="urgent">🔥 very important</option>
+      </select>
     </div>
     <div class="field"><label>notes</label><textarea id="taskNotes" rows="2"></textarea></div>
     <div class="modal-actions">
@@ -601,6 +695,29 @@
     </div>
   </div>
 </div>
+<div class="modal-bg" id="offerDetailModalBg">
+  <div class="modal" style="max-width:480px;">
+    <h2>offer details</h2>
+    <input type="hidden" id="offerDetailBuyerId">
+    <input type="hidden" id="offerDetailOfferId">
+    <div class="field">
+      <label>buyer who made this offer</label>
+      <div id="offerDetailBuyerName" style="font-weight:700; font-size:15.5px; cursor:pointer; color:var(--teal);" onclick="openBuyerFromOfferDetail()"></div>
+      <div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">click the name to open their full buyer profile</div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>offer amount</label><input id="offerDetailAmount"></div>
+      <div class="field"><label>date</label><input type="date" id="offerDetailDate"></div>
+    </div>
+    <div class="field"><label>property / location</label><input id="offerDetailLocation"></div>
+    <div class="field"><label>notes</label><textarea id="offerDetailNotes" rows="3"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeOfferDetailModal()">close</button>
+      <button class="btn danger" onclick="deleteOfferFromDetail()">delete offer</button>
+      <button class="btn brick" onclick="saveOfferFromDetail()">save changes</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <button id="voiceBubble" onclick="toggleVoiceMode()" title="voice chat with gemini">🎙️</button>
 <button id="geminiBubble" onclick="toggleGeminiPanel()" title="ask gemini">✦</button>
@@ -691,13 +808,14 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     document.getElementById('page-'+item.dataset.page).classList.add('active');
     if(item.dataset.page==='buyers') renderBuyers();
     if(item.dataset.page==='tasks') renderTasks();
-    if(item.dataset.page==='dashboard') renderDashboard();
+    if(item.dataset.page==='dashboard'){ if(dashboardView==='day') renderDashboardDay(); else renderDashboard(); }
     if(item.dataset.page==='offers') renderOffersTimeline();
     if(item.dataset.page==='city') renderCityResults();
     if(item.dataset.page==='leads') renderLeadsBoard();
     if(item.dataset.page==='wholesalers') renderWholesalerBoard();
     if(item.dataset.page==='acquisition') renderAcquisitionBoard();
     if(item.dataset.page==='deals') renderDealsList();
+    if(item.dataset.page==='search') renderGlobalSearch();
     if(item.dataset.page==='settings') loadSettingsUI();
   });
 });
@@ -707,9 +825,17 @@ function toast(msg){
   setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
-function fmtDate(d){ return d.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'}); }
-document.getElementById('todayDate').textContent = fmtDate(new Date());
-function todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function fmtDate(){ return new Intl.DateTimeFormat('en-US', { timeZone:'Africa/Cairo', weekday:'long', month:'long', day:'numeric' }).format(new Date()); }
+document.getElementById('todayDate').textContent = fmtDate();
+function todayStr(){ return new Intl.DateTimeFormat('en-CA', { timeZone:'Africa/Cairo' }).format(new Date()); }
+function egyptTimeStr(){ return new Intl.DateTimeFormat('en-GB', { timeZone:'Africa/Cairo', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false }).format(new Date()); }
+function egyptNowKey(){ return todayStr() + ' ' + egyptTimeStr(); }
+function updateEgyptClock(){
+  const el = document.getElementById('egyptClock');
+  if(el) el.textContent = 'cairo time: ' + egyptTimeStr();
+}
+updateEgyptClock();
+setInterval(updateEgyptClock, 1000);
 
 function populateCityDatalist(){
   const dl = document.getElementById('cityDatalist');
@@ -906,6 +1032,7 @@ function openTaskModal(taskId){
       document.getElementById('taskDate').value = t.dueDate||'';
       document.getElementById('taskTime').value = t.dueTime||'';
       document.getElementById('taskBuyer').value = t.buyerId||'';
+      document.getElementById('taskPriority').value = t.priority||'normal';
       document.getElementById('taskNotes').value = t.notes||'';
       document.getElementById('taskDeleteBtn').style.display = 'inline-flex';
     }
@@ -916,6 +1043,7 @@ function openTaskModal(taskId){
     document.getElementById('taskDate').value = todayStr();
     document.getElementById('taskTime').value = '';
     document.getElementById('taskBuyer').value = '';
+    document.getElementById('taskPriority').value = 'normal';
     document.getElementById('taskNotes').value = '';
     document.getElementById('taskDeleteBtn').style.display = 'none';
   }
@@ -930,6 +1058,7 @@ async function saveTask(){
     dueDate: document.getElementById('taskDate').value || todayStr(),
     dueTime: document.getElementById('taskTime').value,
     buyerId: document.getElementById('taskBuyer').value,
+    priority: document.getElementById('taskPriority').value || 'normal',
     notes: document.getElementById('taskNotes').value.trim(),
     done: false,
     updatedAt: new Date().toISOString()
@@ -953,6 +1082,7 @@ async function toggleTaskDone(id){
   const t = store.tasks.find(x=>x.id===id);
   if(!t) return;
   t.done = !t.done;
+  if(t.done) dismissRingingTask(id);
   try {
     if(window.db && window.FirestoreModules){
       const { doc, setDoc } = window.FirestoreModules;
@@ -1008,23 +1138,41 @@ function buyerNameById(id){
   const b = store.buyers.find(x=>x.id===id);
   return b ? b.name : '';
 }
+function priorityBadge(p){
+  if(p==='urgent') return '<span class="badge urgent" style="margin-right:6px;">🔥 very important</span>';
+  if(p==='important') return '<span class="badge important" style="margin-right:6px;">⭐ important</span>';
+  return '';
+}
 function renderTasks(){
   const list = document.getElementById('taskList');
   if(!store.tasks.length){ list.innerHTML='<div class="empty">no tasks yet</div>'; return; }
   list.innerHTML = store.tasks.map(t=>`
-    <div class="task-row">
+    <div class="task-row ${t.priority==='urgent'?'priority-urgent':t.priority==='important'?'priority-important':''}">
       <div class="task-check ${t.done?'done':''}" onclick="toggleTaskDone('${t.id}')"></div>
       <div class="task-body">
-        <div class="task-title ${t.done?'done':''}">${esc(t.title)}</div>
+        <div class="task-title ${t.done?'done':''}">${priorityBadge(t.priority)}${esc(t.title)}</div>
         <div class="task-meta">${esc(t.dueDate)} ${t.dueTime? 'at '+esc(t.dueTime):''}${t.buyerId? ' — <span style="color:var(--teal);font-weight:600;">@'+esc(buyerNameById(t.buyerId))+'</span>':''}</div>
       </div>
       <button class="btn ghost sm" onclick="openTaskModal('${t.id}')">edit</button>
     </div>
   `).join('');
 }
+let dashboardView = 'overview';
+function setDashboardView(v){
+  dashboardView = v;
+  document.querySelectorAll('#page-dashboard .filter-chip').forEach(c=>c.classList.toggle('active', c.dataset.dashview===v));
+  document.getElementById('dashOverviewSection').style.display = v==='overview' ? 'block' : 'none';
+  document.getElementById('dashDaySection').style.display = v==='day' ? 'block' : 'none';
+  if(v==='day') renderDashboardDay(); else renderDashboard();
+}
 function renderDashboard(){
   document.getElementById('statBuyers').textContent = store.buyers.length;
   document.getElementById('statHot').textContent = store.buyers.filter(b=>b.status==='hot').length;
+  document.getElementById('statWholesalers').textContent = store.wholesalers.length;
+  document.getElementById('statAcquisitions').textContent = store.acquisitions.length;
+  let totalOffers = 0;
+  store.buyers.forEach(b=>{ totalOffers += (b.offers||[]).length; });
+  document.getElementById('statOffersTotal').textContent = totalOffers;
   const today = todayStr();
   const dueToday = store.tasks.filter(t=>!t.done && t.dueDate===today);
   document.getElementById('statTasksToday').textContent = dueToday.length;
@@ -1035,10 +1183,10 @@ function renderDashboard(){
     dashTaskList.innerHTML = '<div class="empty">no tasks due today</div>';
   } else {
     dashTaskList.innerHTML = relevant.slice(0,5).map(t=>`
-      <div class="task-row">
+      <div class="task-row ${t.priority==='urgent'?'priority-urgent':t.priority==='important'?'priority-important':''}">
         <div class="task-check ${t.done?'done':''}" onclick="toggleTaskDone('${t.id}')"></div>
         <div class="task-body">
-          <div class="task-title">${esc(t.title)}</div>
+          <div class="task-title">${priorityBadge(t.priority)}${esc(t.title)}</div>
           <div class="task-meta">${esc(t.dueDate)}${t.buyerId? ' — <span style="color:var(--teal);font-weight:600;">@'+esc(buyerNameById(t.buyerId))+'</span>':''}</div>
         </div>
       </div>
@@ -1056,6 +1204,55 @@ function renderDashboard(){
           <div class="buyer-sub">${esc(b.city||'')}, ${esc(b.state||'')}</div>
         </div>
         <button class="btn ghost sm" onclick="openBuyerModal('${b.id}')">view</button>
+      </div>
+    `).join('');
+  }
+}
+function renderDashboardDay(){
+  const picker = document.getElementById('dashDayPicker');
+  if(picker && !picker.value) picker.value = todayStr();
+  const dateVal = picker ? picker.value : todayStr();
+  const isToday = dateVal === todayStr();
+  document.getElementById('dashDayTasksTitle').textContent = isToday ? "today's tasks" : 'tasks due on ' + dateVal;
+  document.getElementById('dashDayOffersTitle').textContent = isToday ? "today's offers" : 'offers made on ' + dateVal;
+  document.getElementById('statDayTasksLabel').textContent = isToday ? 'tasks due today' : 'tasks due that day';
+  document.getElementById('statDayOffersLabel').textContent = isToday ? 'offers made today' : 'offers made that day';
+
+  const dayTasks = store.tasks.filter(t=>t.dueDate===dateVal);
+  document.getElementById('statDayTasks').textContent = dayTasks.length;
+  const dtList = document.getElementById('dashDayTaskList');
+  if(!dayTasks.length){
+    dtList.innerHTML = '<div class="empty">no tasks for this day</div>';
+  } else {
+    dtList.innerHTML = dayTasks.map(t=>`
+      <div class="task-row ${t.priority==='urgent'?'priority-urgent':t.priority==='important'?'priority-important':''}">
+        <div class="task-check ${t.done?'done':''}" onclick="toggleTaskDone('${t.id}')"></div>
+        <div class="task-body">
+          <div class="task-title ${t.done?'done':''}">${priorityBadge(t.priority)}${esc(t.title)}</div>
+          <div class="task-meta">${t.dueTime? 'at '+esc(t.dueTime):''}${t.buyerId? ' — <span style="color:var(--teal);font-weight:600;">@'+esc(buyerNameById(t.buyerId))+'</span>':''}</div>
+        </div>
+        <button class="btn ghost sm" onclick="openTaskModal('${t.id}')">edit</button>
+      </div>
+    `).join('');
+  }
+
+  let dayOffers = [];
+  store.buyers.forEach(b=>{
+    (b.offers||[]).forEach(o=>{
+      if(o.date===dateVal) dayOffers.push({ ...o, buyerName:b.name, buyerId:b.id });
+    });
+  });
+  document.getElementById('statDayOffers').textContent = dayOffers.length;
+  const doList = document.getElementById('dashDayOfferList');
+  if(!dayOffers.length){
+    doList.innerHTML = '<div class="empty">no offers for this day</div>';
+  } else {
+    doList.innerHTML = dayOffers.map(o=>`
+      <div class="buyer-row" style="cursor:pointer;" onclick="openOfferDetail('${o.buyerId}','${o.id}')">
+        <div>
+          <div style="font-weight:700; font-size:14.5px;">${esc(o.amount)} — ${esc(o.location)}</div>
+          <div class="buyer-sub">buyer: ${esc(o.buyerName)}</div>
+        </div>
       </div>
     `).join('');
   }
@@ -1078,15 +1275,143 @@ function renderOffersTimeline(){
   container.innerHTML = `
     <div class="card">
       ${allOffers.map(o=>`
-        <div class="buyer-row">
+        <div class="buyer-row" style="cursor:pointer;" onclick="openOfferDetail('${o.buyerId}','${o.id}')">
           <div>
             <div style="font-weight:700; font-size:15px;">${esc(o.amount)} — ${esc(o.location)}</div>
             <div class="buyer-sub">buyer: ${esc(o.buyerName)} | date: ${esc(o.date)}</div>
           </div>
+          <button class="btn ghost sm">open</button>
         </div>
       `).join('')}
     </div>
   `;
+}
+function openOfferDetail(buyerId, offerId){
+  const b = store.buyers.find(x=>x.id===buyerId);
+  if(!b) return;
+  const o = (b.offers||[]).find(x=>x.id===offerId);
+  if(!o) return;
+  document.getElementById('offerDetailBuyerId').value = buyerId;
+  document.getElementById('offerDetailOfferId').value = offerId;
+  document.getElementById('offerDetailBuyerName').textContent = b.name + (b.phone? ' — '+b.phone : '');
+  document.getElementById('offerDetailAmount').value = o.amount||'';
+  document.getElementById('offerDetailDate').value = o.date||'';
+  document.getElementById('offerDetailLocation').value = o.location||'';
+  document.getElementById('offerDetailNotes').value = o.notes||'';
+  document.getElementById('offerDetailModalBg').classList.add('show');
+}
+function closeOfferDetailModal(){ document.getElementById('offerDetailModalBg').classList.remove('show'); }
+function openBuyerFromOfferDetail(){
+  const buyerId = document.getElementById('offerDetailBuyerId').value;
+  closeOfferDetailModal();
+  openBuyerModal(buyerId);
+}
+async function saveOfferFromDetail(){
+  const buyerId = document.getElementById('offerDetailBuyerId').value;
+  const offerId = document.getElementById('offerDetailOfferId').value;
+  const b = store.buyers.find(x=>x.id===buyerId);
+  if(!b) return;
+  const o = (b.offers||[]).find(x=>x.id===offerId);
+  if(!o) return;
+  o.amount = document.getElementById('offerDetailAmount').value.trim();
+  o.date = document.getElementById('offerDetailDate').value || o.date;
+  o.location = document.getElementById('offerDetailLocation').value.trim();
+  o.notes = document.getElementById('offerDetailNotes').value.trim();
+  try{
+    if(window.db && window.FirestoreModules){
+      const { doc, setDoc } = window.FirestoreModules;
+      await setDoc(doc(window.db,'buyers',buyerId), { offers: b.offers }, { merge:true });
+    }
+  } catch(e){ console.error(e); }
+  closeOfferDetailModal();
+  renderOffersTimeline();
+  if(dashboardView==='day') renderDashboardDay();
+  toast('offer updated');
+}
+async function deleteOfferFromDetail(){
+  const buyerId = document.getElementById('offerDetailBuyerId').value;
+  const offerId = document.getElementById('offerDetailOfferId').value;
+  const b = store.buyers.find(x=>x.id===buyerId);
+  if(!b || !confirm('delete this offer?')) return;
+  b.offers = (b.offers||[]).filter(x=>x.id!==offerId);
+  try{
+    if(window.db && window.FirestoreModules){
+      const { doc, setDoc } = window.FirestoreModules;
+      await setDoc(doc(window.db,'buyers',buyerId), { offers: b.offers }, { merge:true });
+    }
+  } catch(e){ console.error(e); }
+  closeOfferDetailModal();
+  renderOffersTimeline();
+  renderDashboard();
+  if(dashboardView==='day') renderDashboardDay();
+  toast('offer deleted');
+}
+let globalSearchFilter = 'all';
+function setGlobalSearchFilter(f){
+  globalSearchFilter = f;
+  document.querySelectorAll('#page-search .filter-chip').forEach(c=>c.classList.toggle('active', c.dataset.gfilter===f));
+  renderGlobalSearch();
+}
+function renderGlobalSearch(){
+  const q = (document.getElementById('globalSearchInput')?.value || '').toLowerCase().trim();
+  const container = document.getElementById('globalSearchResults');
+  if(!container) return;
+  let results = [];
+  if(globalSearchFilter==='all' || globalSearchFilter==='buyers'){
+    store.buyers.forEach(b=>{
+      const txt = (b.name+' '+(b.phone||'')+' '+(b.city||'')+' '+(b.state||'')+' '+(b.address||'')).toLowerCase();
+      if(!q || txt.includes(q)){
+        results.push({
+          label: b.isLead!==false ? 'lead / buyer' : 'buyer',
+          name: b.name,
+          sub: (b.phone||'no phone') + ' — ' + (b.city||'no city') + ', ' + (b.state||''),
+          action: `openBuyerModal('${b.id}')`
+        });
+      }
+    });
+  }
+  if(globalSearchFilter==='all' || globalSearchFilter==='wholesalers'){
+    store.wholesalers.forEach(w=>{
+      const txt = (w.name+' '+(w.phone||'')+' '+(w.city||'')+' '+(w.state||'')).toLowerCase();
+      if(!q || txt.includes(q)){
+        results.push({
+          label: 'wholesaler',
+          name: w.name,
+          sub: (w.phone||'no phone') + (w.city? ' — '+w.city+', '+(w.state||'') : ''),
+          action: `openWholesalerModal('${w.id}')`
+        });
+      }
+    });
+  }
+  if(globalSearchFilter==='all' || globalSearchFilter==='acquisition'){
+    store.acquisitions.forEach(a=>{
+      const txt = (a.name+' '+(a.phone||'')+' '+(a.address||'')+' '+(a.city||'')).toLowerCase();
+      if(!q || txt.includes(q)){
+        results.push({
+          label: 'acquisition',
+          name: a.name,
+          sub: (a.phone||'no phone') + (a.address? ' — '+a.address : ''),
+          action: `openAcquisitionModal('${a.id}')`
+        });
+      }
+    });
+  }
+  if(!results.length){
+    container.innerHTML = `<div class="empty">${q ? 'no results for "'+esc(q)+'"' : 'start typing to search everything'}</div>`;
+    return;
+  }
+  container.innerHTML = results.map(r=>`
+    <div class="buyer-row">
+      <div style="flex:1; min-width:0;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="buyer-name">${esc(r.name)}</span>
+          <span class="badge cold">${esc(r.label)}</span>
+        </div>
+        <div class="buyer-sub">${esc(r.sub)}</div>
+      </div>
+      <button class="btn ghost sm" onclick="${r.action}">open</button>
+    </div>
+  `).join('');
 }
 
 /* ---------- leads kanban board ---------- */
@@ -1843,25 +2168,35 @@ async function callGeminiFunction(name, args){
 }
 
 // ---------- task notifications ----------
-function playNotificationSound(){
+const NOTIF_SOUNDS = {
+  chime: [{f:880, t:0}, {f:1108.73, t:0.16}],
+  beep: [{f:1000, t:0}, {f:1000, t:0.22}],
+  alert: [{f:600, t:0}, {f:800, t:0.14}, {f:1000, t:0.28}],
+  bell: [{f:659.25, t:0}]
+};
+function playNotificationSound(type){
   try{
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if(!Ctx) return;
+    const chosen = type || localStorage.getItem('notifSoundChoice') || 'chime';
+    const pattern = NOTIF_SOUNDS[chosen] || NOTIF_SOUNDS.chime;
+    const isBell = chosen === 'bell';
+    const dur = isBell ? 0.9 : 0.32;
     const ctx = new Ctx();
-    const notes = [880, 1108.73]; // two-tone chime
-    notes.forEach((freq, i)=>{
+    pattern.forEach(({f, t})=>{
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      const start = ctx.currentTime + i*0.16;
+      osc.type = isBell ? 'triangle' : 'sine';
+      osc.frequency.value = f;
+      const start = ctx.currentTime + t;
       gain.gain.setValueAtTime(0, start);
       gain.gain.linearRampToValueAtTime(0.35, start+0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, start+0.35);
+      gain.gain.exponentialRampToValueAtTime(0.001, start+dur);
       osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(start); osc.stop(start+0.4);
+      osc.start(start); osc.stop(start+dur+0.05);
     });
-    setTimeout(()=>{ try{ ctx.close(); }catch(e){} }, 900);
+    const lastStart = pattern[pattern.length-1].t;
+    setTimeout(()=>{ try{ ctx.close(); }catch(e){} }, (lastStart+dur+0.3)*1000);
   }catch(e){ console.error('sound error', e); }
 }
 function testTaskNotification(){
@@ -1879,6 +2214,40 @@ function testTaskNotification(){
     if(note) note.textContent = 'sound played — enable notifications above to also see a system popup';
   }
 }
+let ringingTasks = new Map();
+let ringLoopInterval = null;
+function startRinging(task){
+  ringingTasks.set(task.id, task.title + (task.priority==='urgent' ? ' (🔥 very important)' : task.priority==='important' ? ' (⭐ important)' : ''));
+  updateRingBanner();
+  if(!ringLoopInterval){
+    playNotificationSound();
+    ringLoopInterval = setInterval(()=>{
+      if(ringingTasks.size){ playNotificationSound(); }
+      else { stopAllRinging(); }
+    }, 4000);
+  }
+}
+function updateRingBanner(){
+  const banner = document.getElementById('ringBanner');
+  const textEl = document.getElementById('ringBannerText');
+  if(!banner || !textEl) return;
+  if(ringingTasks.size===0){ banner.classList.remove('show'); return; }
+  const titles = Array.from(ringingTasks.values());
+  textEl.textContent = titles.length===1
+    ? 'task due: ' + titles[0]
+    : titles.length + ' tasks due — ' + titles.slice(0,2).join(', ') + (titles.length>2 ? '...' : '');
+  banner.classList.add('show');
+}
+function stopAllRinging(){
+  ringingTasks.clear();
+  if(ringLoopInterval){ clearInterval(ringLoopInterval); ringLoopInterval = null; }
+  const banner = document.getElementById('ringBanner');
+  if(banner) banner.classList.remove('show');
+}
+function dismissRingingTask(id){
+  ringingTasks.delete(id);
+  if(ringingTasks.size===0) stopAllRinging(); else updateRingBanner();
+}
 function getNotifiedSet(){
   try{ return new Set(JSON.parse(localStorage.getItem('notifiedTaskIds')||'[]')); }
   catch(e){ return new Set(); }
@@ -1887,24 +2256,25 @@ function saveNotifiedSet(set){
   localStorage.setItem('notifiedTaskIds', JSON.stringify(Array.from(set)));
 }
 function checkDueTasks(){
-  if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
-  const now = new Date();
+  const nowKey = egyptNowKey();
   const notified = getNotifiedSet();
   let changed = false;
   store.tasks.forEach(t=>{
     if(t.done || !t.dueDate) return;
     if(notified.has(t.id)) return;
     const timePart = t.dueTime || '09:00';
-    const due = new Date(t.dueDate + 'T' + timePart + ':00');
-    if(!isNaN(due.getTime()) && due <= now){
-      try{
-        const n = new Notification('dealbook — task due', {
-          body: t.title + (t.notes ? ' — ' + t.notes : ''),
-          tag: 'task-' + t.id
-        });
-        n.onclick = ()=>{ window.focus(); };
-        playNotificationSound();
-      }catch(e){ console.error('notification error', e); }
+    const dueKey = t.dueDate + ' ' + timePart + ':00';
+    if(dueKey <= nowKey){
+      if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
+        try{
+          const n = new Notification('dealbook — task due', {
+            body: (t.priority==='urgent' ? '🔥 VERY IMPORTANT — ' : t.priority==='important' ? '⭐ important — ' : '') + t.title + (t.notes ? ' — ' + t.notes : ''),
+            tag: 'task-' + t.id
+          });
+          n.onclick = ()=>{ window.focus(); };
+        }catch(e){ console.error('notification error', e); }
+      }
+      startRinging(t);
       notified.add(t.id);
       changed = true;
     }
@@ -1919,7 +2289,8 @@ function startTaskNotificationChecks(){
 }
 function enableTaskNotifications(){
   if(typeof Notification === 'undefined'){
-    document.getElementById('notifStatusNote').textContent = 'this browser does not support notifications';
+    document.getElementById('notifStatusNote').textContent = 'this browser does not support system notifications — in-app ringing still works';
+    startTaskNotificationChecks();
     return;
   }
   Notification.requestPermission().then(perm=>{
@@ -1927,15 +2298,13 @@ function enableTaskNotifications(){
     if(perm === 'granted'){
       note.textContent = 'notifications enabled ✓';
       playNotificationSound();
-      startTaskNotificationChecks();
     } else {
-      note.textContent = 'notification permission denied';
+      note.textContent = 'system notification permission denied — in-app ringing + sound will still work while the tab is open';
     }
+    startTaskNotificationChecks();
   });
 }
-if(typeof Notification !== 'undefined' && Notification.permission === 'granted'){
-  startTaskNotificationChecks();
-}
+startTaskNotificationChecks();
 
 // ---------- voice chat (speech-to-text + text-to-speech), same tool access as text chat ----------
 let recognition = null;
@@ -2134,6 +2503,8 @@ function loadSettingsUI(){
   if(keyVal) {
     document.getElementById('geminiKeyInput').value = keyVal;
   }
+  const soundSel = document.getElementById('notifSoundSelect');
+  if(soundSel) soundSel.value = localStorage.getItem('notifSoundChoice') || 'chime';
   checkAiKey();
 }
 loadSettingsUI();
